@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atlas — My Travel Map</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #f7f5f2;
+      --surface:     #ffffff;
+      --border:      #e8e4de;
+      --text-primary:#1a1815;
+      --text-muted:  #8a8580;
+      --accent:      #c17f4a;
+      --accent-light:#f0e6d8;
+      --visited-fill:#c17f4a;
+      --visited-opacity: 0.35;
+      --pin:         #c17f4a;
+      --pin-hover:   #a0632f;
+      --shadow-sm:   0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md:   0 4px 16px rgba(0,0,0,0.10);
+      --shadow-lg:   0 8px 32px rgba(0,0,0,0.13);
+      --radius:      10px;
+      --font-display:'Playfair Display', Georgia, serif;
+      --font-body:   'DM Sans', system-ui, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: var(--font-body);
+      color: var(--text-primary);
+    }
+
+    /* ─── Layout ────────────────────────────────────────────────────── */
+    .app {
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      height: 100vh;
+    }
+
+    /* ─── Header ────────────────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--text-primary);
+    }
+
+    .logo span { color: var(--accent); }
+
+    .header-stats {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-num {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 7px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--pin-hover); }
+
+    /* ─── Map container ─────────────────────────────────────────────── */
+    .map-wrapper {
+      position: relative;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: #e8f0f7;
+    }
+
+    /* Override Leaflet default tiles attribution size */
+    .leaflet-control-attribution {
+      font-size: 10px !important;
+      background: rgba(255,255,255,0.7) !important;
+    }
+
+    /* ─── Search bar (floating over map) ───────────────────────────── */
+    .search-bar {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 800;
+      width: min(460px, calc(100vw - 40px));
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      padding: 0 6px 0 18px;
+      gap: 6px;
+      transition: box-shadow 0.2s;
+    }
+
+    .search-bar:focus-within {
+      box-shadow: var(--shadow-lg);
+      border-color: var(--accent);
+    }
+
+    .search-icon {
+      color: var(--text-muted);
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    #city-search {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      padding: 11px 0;
+    }
+
+    #city-search::placeholder { color: var(--text-muted); }
+
+    .search-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      padding: 7px 16px;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .search-btn:hover { background: var(--pin-hover); }
+
+    /* ─── Search suggestions dropdown ──────────────────────────────── */
+    .suggestions {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      display: none;
+    }
+
+    .suggestions.open { display: block; }
+
+    .suggestion-item {
+      padding: 10px 18px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.1s;
+    }
+
+    .suggestion-item:hover { background: var(--accent-light); }
+
+    .suggestion-item .sug-icon { color: var(--accent); font-size: 12px; }
+
+    .suggestion-item .sug-country {
+      margin-left: auto;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    /* ─── Map controls ──────────────────────────────────────────────── */
+    .map-controls {
+      position: absolute;
+      bottom: 28px;
+      right: 24px;
+      z-index: 800;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .map-controls button {
+      width: 36px;
+      height: 36px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      color: var(--text-primary);
+    }
+
+    .map-controls button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ─── Sidebar / City panel ──────────────────────────────────────── */
+    .city-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: 340px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 700;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .city-panel.open {
+      transform: translateX(0);
+    }
+
+    .panel-header {
+      padding: 24px 24px 0;
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      z-index: 1;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-muted);
+      line-height: 1;
+      padding: 4px;
+    }
+
+    .panel-close:hover { color: var(--text-primary); }
+
+    .panel-city {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .panel-country {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .panel-body {
+      padding: 20px 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Dates section */
+    .panel-section-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .dates-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .date-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+
+    .add-date-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .add-date-row input[type="date"] {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      color: var(--text-primary);
+      background: var(--bg);
+      outline: none;
+    }
+
+    .add-date-row input[type="date"]:focus { border-color: var(--accent); }
+
+    .add-date-row button {
+      padding: 6px 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+
+    /* Notes textarea */
+    .notes-textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      color: var(--text-primary);
+      background: var(--bg);
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+      line-height: 1.5;
+      transition: border-color 0.15s;
+    }
+
+    .notes-textarea:focus { border-color: var(--accent); }
+
+    /* Save button */
+    .panel-save-btn {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: auto;
+    }
+
+    .panel-save-btn:hover { background: var(--pin-hover); }
+
+    /* ─── Legend ─────────────────────────────────────────────────────── */
+    .legend {
+      position: absolute;
+      bottom: 28px;
+      left: 24px;
+      z-index: 800;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .legend-title {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      color: var(--text-primary);
+      margin-bottom: 5px;
+    }
+
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+
+    /* ─── Toast notification ─────────────────────────────────────────── */
+    .toast {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text-primary);
+      color: white;
+      font-size: 0.82rem;
+      padding: 10px 20px;
+      border-radius: 30px;
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ─── Custom Leaflet pin ─────────────────────────────────────────── */
+    .custom-pin {
+      position: relative;
+      width: 28px;
+      height: 28px;
+    }
+
+    .custom-pin svg { width: 28px; height: 36px; }
+
+    /* ─── Loading overlay ────────────────────────────────────────────── */
+    #loading {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      gap: 16px;
+      transition: opacity 0.4s;
+    }
+
+    #loading.hidden { opacity: 0; pointer-events: none; }
+
+    .loading-logo {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 600;
+    }
+
+    .loading-logo span { color: var(--accent); }
+
+    .loading-bar {
+      width: 160px;
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .loading-bar-inner {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      animation: loadBar 1.6s ease-in-out infinite;
+    }
+
+    @keyframes loadBar {
+      0%   { width: 0%;   margin-left: 0%; }
+      50%  { width: 60%;  margin-left: 20%; }
+      100% { width: 0%;   margin-left: 100%; }
+    }
+
+    .loading-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ─── Scrollbar ─────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">atl<span>a</span>s</div>
+
+    <div class="header-stats">
+      <div class="stat">
+        <span class="stat-num" id="stat-countries">0</span>
+        <span class="stat-label">Countries</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" id="stat-cities">0</span>
+        <span class="stat-label">Cities</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-ghost" id="clear-btn">Clear all</button>
+      <button class="btn btn-primary" id="add-btn">+ Add place</button>
+    </div>
+  </header>
+
+  <!-- Map -->
+  <div class="map-wrapper">
+
+    <!-- Loading -->
+    <div id="loading">
+      <div class="loading-logo">atl<span>a</span>s</div>
+      <div class="loading-bar"><div class="loading-bar-inner"></div></div>
+      <div class="loading-sub">Loading your world…</div>
+    </div>
+
+    <!-- Map element -->
+    <div id="map"></div>
+
+    <!-- Search -->
+    <div class="search-bar" id="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="city-search" placeholder="Search a city to add…" autocomplete="off" />
+      <button class="search-btn" id="search-submit">Add pin</button>
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-title">Map Key</div>
+      <div class="legend-row">
+        <div class="legend-swatch" style="background:var(--visited-fill); opacity:0.7;"></div>
+        <span>Visited country</span>
+      </div>
+      <div class="legend-row">
+        <div class="legend-swatch" style="background:var(--pin); border-radius:50%;"></div>
+        <span>City pin</span>
+      </div>
+    </div>
+
+    <!-- Map controls -->
+    <div class="map-controls">
+      <button id="zoom-in" title="Zoom in">+</button>
+      <button id="zoom-out" title="Zoom out">−</button>
+      <button id="reset-view" title="Reset view">⊙</button>
+    </div>
+
+    <!-- City detail panel -->
+    <div class="city-panel" id="city-panel">
+      <div class="panel-header">
+        <button class="panel-close" id="panel-close">✕</button>
+        <div class="panel-city" id="panel-city-name">City</div>
+        <div class="panel-country" id="panel-city-country">Country</div>
+      </div>
+      <div class="panel-body">
+
+        <div>
+          <div class="panel-section-label">Trips</div>
+          <div class="dates-list" id="dates-list"></div>
+          <div class="add-date-row">
+            <input type="date" id="date-input" />
+            <button onclick="addDate()">Add</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="panel-section-label">Restaurants</div>
+          <textarea class="notes-textarea" id="notes-restaurants" placeholder="e.g. Nobu, a great ramen spot on 5th Ave…"></textarea>
+        </div>
+
+        <div>
+          <div class="panel-section-label">Attractions</div>
+          <textarea class="notes-textarea" id="notes-attractions" placeholder="e.g. Eiffel Tower, the old town market…"></textarea>
+        </div>
+
+        <div>
+          <div class="panel-section-label">Notes</div>
+          <textarea class="notes-textarea" id="notes-general" placeholder="Anything else worth remembering…"></textarea>
+        </div>
+
+        <button class="panel-save-btn" onclick="savePin()">Save</button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+  </div><!-- end map-wrapper -->
+</div><!-- end app -->
+
+<script>
+// ─── State ──────────────────────────────────────────────────────────────────
+const state = {
+  pins: {},          // { cityKey: { name, country, lat, lng, dates[], restaurants, attractions, notes } }
+  visitedCountries: new Set(),
+  countryLayers: {},
+  activeKey: null,
+  countryGeoJSON: null,
+};
+
+// ─── Init Map ────────────────────────────────────────────────────────────────
+const map = L.map('map', {
+  center: [20, 10],
+  zoom: 2,
+  zoomControl: false,
+  minZoom: 1.5,
+  maxZoom: 14,
+  worldCopyJump: true,
+});
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OSM contributors',
+  subdomains: 'abcd',
+  maxZoom: 19,
+}).addTo(map);
+
+// Add subtle label layer on top
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+  subdomains: 'abcd',
+  maxZoom: 19,
+  pane: 'shadowPane',
+}).addTo(map);
+
+// ─── Load Country GeoJSON ─────────────────────────────────────────────────
+fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+  .then(r => r.json())
+  .then(data => {
+    state.countryGeoJSON = data;
+    // Add a transparent base layer for click detection
+    L.geoJSON(data, {
+      style: () => ({
+        fillColor: 'transparent',
+        fillOpacity: 0,
+        color: '#d0c8be',
+        weight: 0.5,
+        opacity: 0.6,
+      }),
+      onEachFeature: (feature, layer) => {
+        const name = feature.properties.ADMIN || feature.properties.name;
+        layer.on('click', () => toggleCountry(name, layer, feature));
+        layer.on('mouseover', function() {
+          if (!state.visitedCountries.has(name)) {
+            this.setStyle({ fillColor: '#e8ddd3', fillOpacity: 0.4 });
+          }
+        });
+        layer.on('mouseout', function() {
+          if (!state.visitedCountries.has(name)) {
+            this.setStyle({ fillColor: 'transparent', fillOpacity: 0 });
+          }
+        });
+        state.countryLayers[name] = layer;
+      }
+    }).addTo(map);
+
+    document.getElementById('loading').classList.add('hidden');
+    loadFromStorage();
+  })
+  .catch(() => {
+    document.getElementById('loading').classList.add('hidden');
+    showToast('Could not load country data. Check your connection.');
+  });
+
+// ─── Country toggle ───────────────────────────────────────────────────────
+function toggleCountry(name, layer, feature) {
+  if (state.visitedCountries.has(name)) {
+    state.visitedCountries.delete(name);
+    layer.setStyle({
+      fillColor: 'transparent', fillOpacity: 0,
+      color: '#d0c8be', weight: 0.5, opacity: 0.6,
+    });
+  } else {
+    state.visitedCountries.add(name);
+    layer.setStyle({
+      fillColor: '#c17f4a', fillOpacity: 0.35,
+      color: '#a0632f', weight: 1, opacity: 0.8,
+    });
+    showToast(`✓ ${name} marked as visited`);
+  }
+  updateStats();
+  saveToStorage();
+}
+
+function shadeCountry(name) {
+  const layer = state.countryLayers[name];
+  if (layer) {
+    state.visitedCountries.add(name);
+    layer.setStyle({
+      fillColor: '#c17f4a', fillOpacity: 0.35,
+      color: '#a0632f', weight: 1, opacity: 0.8,
+    });
+  }
+}
+
+// ─── Custom pin icon ──────────────────────────────────────────────────────
+function makePinIcon(color = '#c17f4a') {
+  const svg = `<svg viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg">
+    <path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 22 14 22S28 23.333 28 14C28 6.268 21.732 0 14 0z" fill="${color}"/>
+    <circle cx="14" cy="14" r="6" fill="white"/>
+  </svg>`;
+  return L.divIcon({
+    html: svg,
+    className: '',
+    iconSize: [28, 36],
+    iconAnchor: [14, 36],
+    popupAnchor: [0, -36],
+  });
+}
+
+// ─── City search via Nominatim ────────────────────────────────────────────
+const searchInput = document.getElementById('city-search');
+const suggestionsEl = document.getElementById('suggestions');
+let searchTimeout;
+
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  const q = searchInput.value.trim();
+  if (q.length < 2) { closeSuggestions(); return; }
+  searchTimeout = setTimeout(() => fetchSuggestions(q), 350);
+});
+
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('search-submit').click(); }
+  if (e.key === 'Escape') closeSuggestions();
+});
+
+document.getElementById('search-submit').addEventListener('click', () => {
+  const q = searchInput.value.trim();
+  if (q) searchAndDrop(q);
+});
+
+async function fetchSuggestions(query) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&featuretype=city&accept-language=en`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    const results = await res.json();
+    showSuggestions(results.filter(r => ['city','town','village','municipality'].includes(r.type) || r.class === 'place'));
+  } catch { closeSuggestions(); }
+}
+
+function showSuggestions(results) {
+  if (!results.length) { closeSuggestions(); return; }
+  suggestionsEl.innerHTML = results.slice(0, 5).map(r => {
+    const parts = r.display_name.split(', ');
+    const city = parts[0];
+    const country = parts[parts.length - 1];
+    return `<div class="suggestion-item" onclick="selectSuggestion(${r.lat}, ${r.lon}, '${escapeAttr(city)}', '${escapeAttr(country)}')">
+      <span class="sug-icon">📍</span>
+      <span>${escapeHtml(city)}</span>
+      <span class="sug-country">${escapeHtml(country)}</span>
+    </div>`;
+  }).join('');
+  suggestionsEl.classList.add('open');
+}
+
+function closeSuggestions() {
+  suggestionsEl.classList.remove('open');
+  suggestionsEl.innerHTML = '';
+}
+
+function selectSuggestion(lat, lon, city, country) {
+  closeSuggestions();
+  searchInput.value = '';
+  dropPin(parseFloat(lat), parseFloat(lon), city, country);
+}
+
+async function searchAndDrop(query) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=en`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    const [r] = await res.json();
+    if (!r) { showToast('City not found — try a more specific name'); return; }
+    const parts = r.display_name.split(', ');
+    const city = parts[0];
+    const country = parts[parts.length - 1];
+    closeSuggestions();
+    searchInput.value = '';
+    dropPin(parseFloat(r.lat), parseFloat(r.lon), city, country);
+  } catch { showToast('Search failed — check your connection'); }
+}
+
+// ─── Drop a pin ───────────────────────────────────────────────────────────
+function dropPin(lat, lng, cityName, countryName, existingData = null) {
+  const key = `${cityName}__${countryName}`;
+
+  if (state.pins[key]) {
+    // Pin exists — just open its panel
+    map.flyTo([lat, lng], Math.max(map.getZoom(), 6), { duration: 1 });
+    openPanel(key);
+    return;
+  }
+
+  const marker = L.marker([lat, lng], { icon: makePinIcon(), riseOnHover: true })
+    .addTo(map)
+    .on('click', () => openPanel(key));
+
+  state.pins[key] = {
+    name: cityName,
+    country: countryName,
+    lat, lng,
+    marker,
+    dates: existingData?.dates || [],
+    restaurants: existingData?.restaurants || '',
+    attractions: existingData?.attractions || '',
+    notes: existingData?.notes || '',
+  };
+
+  // Shade the country
+  findAndShadeCountry(countryName);
+
+  map.flyTo([lat, lng], Math.max(map.getZoom(), 6), { duration: 1.2 });
+  openPanel(key);
+  updateStats();
+  saveToStorage();
+}
+
+function findAndShadeCountry(countryName) {
+  // Try direct match first
+  if (state.countryLayers[countryName]) {
+    shadeCountry(countryName);
+    return;
+  }
+  // Fuzzy match (Nominatim country names vs GeoJSON names can differ slightly)
+  const norm = s => s.toLowerCase().replace(/[^a-z]/g,'');
+  const match = Object.keys(state.countryLayers).find(k => norm(k) === norm(countryName));
+  if (match) shadeCountry(match);
+}
+
+// ─── Panel ────────────────────────────────────────────────────────────────
+function openPanel(key) {
+  const pin = state.pins[key];
+  state.activeKey = key;
+
+  document.getElementById('panel-city-name').textContent = pin.name;
+  document.getElementById('panel-city-country').textContent = pin.country;
+  document.getElementById('notes-restaurants').value = pin.restaurants;
+  document.getElementById('notes-attractions').value = pin.attractions;
+  document.getElementById('notes-general').value = pin.notes;
+  renderDates(pin.dates);
+
+  document.getElementById('city-panel').classList.add('open');
+}
+
+function renderDates(dates) {
+  const el = document.getElementById('dates-list');
+  if (!dates.length) { el.innerHTML = '<div style="font-size:0.78rem;color:var(--text-muted)">No trips logged yet</div>'; return; }
+  el.innerHTML = dates.map((d, i) => `
+    <div class="date-tag">
+      📅 ${formatDate(d)}
+      <span style="cursor:pointer;margin-left:4px;opacity:0.6" onclick="removeDate(${i})">✕</span>
+    </div>`).join('');
+}
+
+function addDate() {
+  const input = document.getElementById('date-input');
+  if (!input.value || !state.activeKey) return;
+  const pin = state.pins[state.activeKey];
+  if (!pin.dates.includes(input.value)) {
+    pin.dates.push(input.value);
+    pin.dates.sort();
+  }
+  renderDates(pin.dates);
+  input.value = '';
+  saveToStorage();
+}
+
+function removeDate(index) {
+  if (!state.activeKey) return;
+  const pin = state.pins[state.activeKey];
+  pin.dates.splice(index, 1);
+  renderDates(pin.dates);
+  saveToStorage();
+}
+
+function savePin() {
+  if (!state.activeKey) return;
+  const pin = state.pins[state.activeKey];
+  pin.restaurants = document.getElementById('notes-restaurants').value;
+  pin.attractions = document.getElementById('notes-attractions').value;
+  pin.notes = document.getElementById('notes-general').value;
+  saveToStorage();
+  showToast(`✓ ${pin.name} saved`);
+  document.getElementById('city-panel').classList.remove('open');
+  state.activeKey = null;
+}
+
+document.getElementById('panel-close').addEventListener('click', () => {
+  document.getElementById('city-panel').classList.remove('open');
+  state.activeKey = null;
+});
+
+// ─── Stats ────────────────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('stat-countries').textContent = state.visitedCountries.size;
+  document.getElementById('stat-cities').textContent = Object.keys(state.pins).length;
+}
+
+// ─── Controls ─────────────────────────────────────────────────────────────
+document.getElementById('zoom-in').addEventListener('click', () => map.zoomIn());
+document.getElementById('zoom-out').addEventListener('click', () => map.zoomOut());
+document.getElementById('reset-view').addEventListener('click', () => map.flyTo([20, 10], 2, { duration: 1 }));
+
+document.getElementById('add-btn').addEventListener('click', () => {
+  searchInput.focus();
+  document.getElementById('search-bar').style.boxShadow = '0 0 0 3px rgba(193,127,74,0.25)';
+  setTimeout(() => document.getElementById('search-bar').style.boxShadow = '', 1200);
+});
+
+document.getElementById('clear-btn').addEventListener('click', () => {
+  if (!confirm('Remove all pins and visited countries?')) return;
+  Object.values(state.pins).forEach(p => map.removeLayer(p.marker));
+  state.pins = {};
+  state.visitedCountries.clear();
+  Object.values(state.countryLayers).forEach(l => l.setStyle({
+    fillColor: 'transparent', fillOpacity: 0, color: '#d0c8be', weight: 0.5, opacity: 0.6,
+  }));
+  updateStats();
+  saveToStorage();
+  showToast('Map cleared');
+});
+
+// Close suggestions on outside click
+document.addEventListener('click', e => {
+  if (!document.getElementById('search-bar').contains(e.target)) closeSuggestions();
+});
+
+// ─── Persistence (localStorage) ───────────────────────────────────────────
+function saveToStorage() {
+  const data = {
+    pins: Object.entries(state.pins).map(([k, p]) => ({
+      key: k, name: p.name, country: p.country, lat: p.lat, lng: p.lng,
+      dates: p.dates, restaurants: p.restaurants, attractions: p.attractions, notes: p.notes,
+    })),
+    visitedCountries: [...state.visitedCountries],
+  };
+  localStorage.setItem('atlas-data', JSON.stringify(data));
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem('atlas-data');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+
+    // Restore visited countries (shading)
+    data.visitedCountries?.forEach(name => shadeCountry(name));
+
+    // Restore pins
+    data.pins?.forEach(p => {
+      const marker = L.marker([p.lat, p.lng], { icon: makePinIcon(), riseOnHover: true })
+        .addTo(map)
+        .on('click', () => openPanel(p.key));
+
+      state.pins[p.key] = { ...p, marker };
+    });
+
+    updateStats();
+  } catch (e) {
+    console.warn('Could not restore saved data', e);
+  }
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────
+let toastTimeout;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────
+function formatDate(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeAttr(s) { return s.replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>
