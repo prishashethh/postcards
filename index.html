@@ -3,797 +3,490 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Atlas — My Travel Map</title>
-
-  <!-- Leaflet -->
+  <title>postcards — my travel map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
 
   <style>
-    /* ─── Reset & Base ─────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:          #f7f5f2;
-      --surface:     #ffffff;
-      --border:      #e8e4de;
-      --text-primary:#1a1815;
-      --text-muted:  #8a8580;
-      --accent:      #c17f4a;
-      --accent-light:#f0e6d8;
-      --visited-fill:#c17f4a;
-      --visited-opacity: 0.35;
-      --pin:         #c17f4a;
-      --pin-hover:   #a0632f;
-      --shadow-sm:   0 1px 3px rgba(0,0,0,0.08);
-      --shadow-md:   0 4px 16px rgba(0,0,0,0.10);
-      --shadow-lg:   0 8px 32px rgba(0,0,0,0.13);
-      --radius:      10px;
-      --font-display:'Playfair Display', Georgia, serif;
-      --font-body:   'DM Sans', system-ui, sans-serif;
+      --bg:           #f2e8ff;
+      --surface:      #ffffff;
+      --border:       #e7ddf7;
+      --text-primary: #2a2336;
+      --text-muted:   #897fa3;
+      --accent:       #8962d8;
+      --accent-light: #ece2ff;
+      --accent-mid:   #cab0ff;
+      --pin-hover:    #6e4cc4;
+      --shadow-sm:    0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md:    0 4px 16px rgba(0,0,0,0.10);
+      --shadow-lg:    0 8px 32px rgba(0,0,0,0.13);
+      --radius:       10px;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
     }
 
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      font-family: var(--font-body);
-      color: var(--text-primary);
-    }
+    html, body { height: 100%; background: var(--bg); font-family: var(--font-body); color: var(--text-primary); }
 
-    /* ─── Layout ────────────────────────────────────────────────────── */
-    .app {
-      display: grid;
-      grid-template-rows: 56px 1fr;
-      height: 100vh;
-    }
+    .app { display: grid; grid-template-rows: 56px 1fr; height: 100vh; }
 
-    /* ─── Header ────────────────────────────────────────────────────── */
+    /* ── Header ── */
     header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 28px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      z-index: 1000;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; background: var(--surface);
+      border-bottom: 1px solid var(--border); z-index: 1000;
     }
-
-    .logo {
-      font-family: var(--font-display);
-      font-size: 1.25rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      color: var(--text-primary);
-    }
-
+    .logo { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; letter-spacing: 0.02em; flex: 1; }
     .logo span { color: var(--accent); }
-
-    .header-stats {
-      display: flex;
-      gap: 28px;
-      align-items: center;
-    }
-
-    .stat {
-      text-align: center;
-    }
-
-    .stat-num {
-      display: block;
-      font-family: var(--font-display);
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--accent);
-      line-height: 1;
-    }
-
-    .stat-label {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .btn {
-      font-family: var(--font-body);
-      font-size: 0.8rem;
-      font-weight: 500;
-      padding: 7px 16px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      letter-spacing: 0.02em;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-    }
-
+    .header-stats { display: flex; gap: 28px; align-items: center; }
+    .stat { text-align: center; }
+    .stat-num { display: block; font-family: var(--font-display); font-size: 1.1rem; font-weight: 600; color: var(--accent); line-height: 1; }
+    .stat-label { font-size: 0.65rem; text-transform: lowercase; letter-spacing: 0.1em; color: var(--text-muted); margin-top: 2px; }
+    .header-actions { display: flex; gap: 10px; align-items: center; flex: 1; justify-content: flex-end; }
+    .btn { font-family: var(--font-body); font-size: 0.8rem; font-weight: 500; padding: 7px 16px; border-radius: 6px; border: none; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; text-decoration: none; line-height: 1; }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-    }
-
+    .btn-ghost.active { background: var(--accent-light); color: var(--accent-dark); border-color: var(--accent-mid); font-weight: 600; }
+    .btn-primary { background: var(--accent); color: #fff; }
     .btn-primary:hover { background: var(--pin-hover); }
 
-    /* ─── Map container ─────────────────────────────────────────────── */
-    .map-wrapper {
-      position: relative;
-      overflow: hidden;
-    }
+    /* ── Map ── */
+    .map-wrapper { position: relative; overflow: hidden; }
+    #map { width: 100%; height: 100%; background: #e8f0f7; }
+    .leaflet-control-attribution { font-size: 10px !important; background: rgba(255,255,255,0.7) !important; }
 
-    #map {
-      width: 100%;
-      height: 100%;
-      background: #e8f0f7;
-    }
-
-    /* Override Leaflet default tiles attribution size */
-    .leaflet-control-attribution {
-      font-size: 10px !important;
-      background: rgba(255,255,255,0.7) !important;
-    }
-
-    /* ─── Search bar (floating over map) ───────────────────────────── */
+    /* ── Search ── */
     .search-bar {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 800;
-      width: min(460px, calc(100vw - 40px));
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 40px;
-      box-shadow: var(--shadow-md);
-      display: flex;
-      align-items: center;
-      padding: 0 6px 0 18px;
-      gap: 6px;
-      transition: box-shadow 0.2s;
+      position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      z-index: 800; width: min(460px, calc(100vw - 40px));
+      background: var(--surface); border: 1px solid var(--border); border-radius: 40px;
+      box-shadow: var(--shadow-md); display: flex; align-items: center;
+      padding: 0 6px 0 18px; gap: 6px; transition: box-shadow 0.2s;
     }
-
-    .search-bar:focus-within {
-      box-shadow: var(--shadow-lg);
-      border-color: var(--accent);
-    }
-
-    .search-icon {
-      color: var(--text-muted);
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    #city-search {
-      flex: 1;
-      border: none;
-      outline: none;
-      background: transparent;
-      font-family: var(--font-body);
-      font-size: 0.875rem;
-      color: var(--text-primary);
-      padding: 11px 0;
-    }
-
+    .search-bar:focus-within { box-shadow: var(--shadow-lg); border-color: var(--accent); }
+    .search-icon { color: var(--text-muted); font-size: 14px; flex-shrink: 0; }
+    #city-search { flex: 1; border: none; outline: none; background: transparent; font-family: var(--font-body); font-size: 0.875rem; color: var(--text-primary); padding: 11px 0; }
     #city-search::placeholder { color: var(--text-muted); }
-
-    .search-btn {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 30px;
-      padding: 7px 16px;
-      font-family: var(--font-body);
-      font-size: 0.78rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
-      white-space: nowrap;
-    }
-
+    .search-btn { background: var(--accent); color: #fff; border: none; border-radius: 30px; padding: 7px 16px; font-family: var(--font-body); font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
     .search-btn:hover { background: var(--pin-hover); }
-
-    /* ─── Search suggestions dropdown ──────────────────────────────── */
-    .suggestions {
-      position: absolute;
-      top: calc(100% + 6px);
-      left: 0; right: 0;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-md);
-      overflow: hidden;
-      display: none;
-    }
-
+    .suggestions { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-md); overflow: hidden; display: none; }
     .suggestions.open { display: block; }
-
-    .suggestion-item {
-      padding: 10px 18px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transition: background 0.1s;
-    }
-
+    .suggestion-item { padding: 10px 18px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: background 0.1s; }
     .suggestion-item:hover { background: var(--accent-light); }
-
     .suggestion-item .sug-icon { color: var(--accent); font-size: 12px; }
+    .suggestion-item .sug-country { margin-left: auto; font-size: 0.72rem; color: var(--text-muted); }
 
-    .suggestion-item .sug-country {
-      margin-left: auto;
-      font-size: 0.72rem;
-      color: var(--text-muted);
-    }
+    /* ── Map controls ── */
+    .map-controls { position: absolute; bottom: 28px; right: 24px; z-index: 800; display: flex; flex-direction: column; gap: 6px; }
+    .map-controls button { width: 36px; height: 36px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-size: 16px; cursor: pointer; box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; transition: all 0.15s; color: var(--text-primary); }
+    .map-controls button:hover { border-color: var(--accent); color: var(--accent); }
 
-    /* ─── Map controls ──────────────────────────────────────────────── */
-    .map-controls {
-      position: absolute;
-      bottom: 28px;
-      right: 24px;
-      z-index: 800;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    /* ── Legend ── */
+    .legend { position: absolute; bottom: 28px; left: 24px; z-index: 800; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--shadow-sm); }
+    .legend-title { font-size: 0.65rem; text-transform: lowercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
+    .legend-row { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--text-primary); margin-bottom: 5px; }
+    .legend-swatch { width: 14px; height: 14px; border-radius: 3px; }
 
-    .map-controls button {
-      width: 36px;
-      height: 36px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s;
-      color: var(--text-primary);
-    }
-
-    .map-controls button:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    /* ─── Sidebar / City panel ──────────────────────────────────────── */
+    /* ── City Panel ── */
     .city-panel {
-      position: absolute;
-      top: 0;
-      right: 0;
-      height: 100%;
-      width: 340px;
-      background: var(--surface);
-      border-left: 1px solid var(--border);
-      z-index: 700;
-      transform: translateX(100%);
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
+      position: absolute; top: 0; right: 0; height: 100%; width: 360px;
+      background: var(--surface); border-left: 1px solid var(--border);
+      z-index: 700; transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column; overflow: hidden;
     }
-
-    .city-panel.open {
-      transform: translateX(0);
-    }
+    .city-panel.open { transform: translateX(0); }
 
     .panel-header {
-      padding: 24px 24px 0;
-      position: sticky;
-      top: 0;
-      background: var(--surface);
-      z-index: 1;
-      padding-bottom: 16px;
+      padding: 22px 24px 16px;
       border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
     }
-
-    .panel-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 18px;
-      color: var(--text-muted);
-      line-height: 1;
-      padding: 4px;
-    }
-
+    .panel-close { position: absolute; top: 18px; right: 18px; background: none; border: none; cursor: pointer; font-size: 18px; color: var(--text-muted); padding: 4px; line-height: 1; }
     .panel-close:hover { color: var(--text-primary); }
+    .panel-city { font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; margin-bottom: 2px; padding-right: 28px; }
+    .panel-country { font-size: 0.75rem; color: var(--text-muted); text-transform: none; letter-spacing: 0.08em; margin-bottom: 14px; }
 
-    .panel-city {
-      font-family: var(--font-display);
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 2px;
+    /* Trip selector dropdown */
+    .trip-selector-row {
+      display: flex; align-items: center; gap: 8px; margin-top: 4px;
     }
-
-    .panel-country {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+    .trip-dropdown {
+      flex: 1; font-family: var(--font-body); font-size: 0.82rem;
+      color: var(--text-primary); background: var(--bg);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 7px 10px; outline: none; cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a8580'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      padding-right: 28px;
     }
-
-    .panel-body {
-      padding: 20px 24px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+    .trip-dropdown:focus { border-color: var(--accent); }
+    .add-trip-btn {
+      background: var(--accent-light); color: var(--accent);
+      border: 1px solid var(--accent); border-radius: 6px;
+      padding: 7px 12px; font-size: 0.78rem; font-weight: 500;
+      cursor: pointer; white-space: nowrap; font-family: var(--font-body);
+      transition: background 0.15s;
     }
+    .add-trip-btn:hover { background: var(--accent); color: white; }
 
-    /* Dates section */
-    .panel-section-label {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
+    /* Panel scrollable body */
+    .panel-body { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 18px; }
 
-    .dates-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .section-label { font-size: 0.65rem; text-transform: lowercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 8px; font-weight: 500; }
 
-    .date-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--accent-light);
-      color: var(--accent);
-      font-size: 0.78rem;
-      font-weight: 500;
-      padding: 5px 10px;
-      border-radius: 4px;
-      width: fit-content;
-    }
+    /* Date range row */
+    .date-range-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .date-field label { font-size: 0.7rem; color: var(--text-muted); display: block; margin-bottom: 4px; }
+    .date-field input[type="date"] { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-family: var(--font-body); font-size: 0.78rem; color: var(--text-primary); background: var(--bg); outline: none; }
+    .date-field input[type="date"]:focus { border-color: var(--accent); }
 
-    .add-date-row {
-      display: flex;
-      gap: 6px;
-      margin-top: 4px;
-    }
+    /* Photos */
+    .photos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+    .photo-thumb { aspect-ratio: 1; border-radius: 6px; overflow: hidden; position: relative; background: var(--bg); border: 1px solid var(--border); }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-remove { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,0.55); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+    .photo-upload-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 9px; border: 1.5px dashed var(--border); border-radius: 8px; background: var(--bg); color: var(--text-muted); font-family: var(--font-body); font-size: 0.78rem; cursor: pointer; transition: all 0.15s; }
+    .photo-upload-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    #photo-file-input { display: none; }
 
-    .add-date-row input[type="date"] {
-      flex: 1;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-family: var(--font-body);
-      font-size: 0.78rem;
-      color: var(--text-primary);
-      background: var(--bg);
-      outline: none;
-    }
-
-    .add-date-row input[type="date"]:focus { border-color: var(--accent); }
-
-    .add-date-row button {
-      padding: 6px 12px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      cursor: pointer;
-    }
-
-    /* Notes textarea */
-    .notes-textarea {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px 12px;
-      font-family: var(--font-body);
-      font-size: 0.82rem;
-      color: var(--text-primary);
-      background: var(--bg);
-      resize: vertical;
-      min-height: 80px;
-      outline: none;
-      line-height: 1.5;
-      transition: border-color 0.15s;
-    }
-
+    /* Notes */
+    .notes-textarea { width: 100%; border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; font-family: var(--font-body); font-size: 0.82rem; color: var(--text-primary); background: var(--bg); resize: vertical; min-height: 72px; outline: none; line-height: 1.5; transition: border-color 0.15s; }
     .notes-textarea:focus { border-color: var(--accent); }
 
-    /* Save button */
-    .panel-save-btn {
-      width: 100%;
-      padding: 11px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: var(--radius);
-      font-family: var(--font-body);
-      font-size: 0.85rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s;
-      margin-top: auto;
-    }
-
+    /* Delete trip + save row */
+    .panel-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
+    .delete-trip-btn { padding: 10px 14px; background: none; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text-muted); font-family: var(--font-body); font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
+    .delete-trip-btn:hover { border-color: #e05c5c; color: #e05c5c; }
+    .panel-save-btn { flex: 1; padding: 10px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-family: var(--font-body); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: background 0.15s; }
     .panel-save-btn:hover { background: var(--pin-hover); }
 
-    /* ─── Legend ─────────────────────────────────────────────────────── */
-    .legend {
-      position: absolute;
-      bottom: 28px;
-      left: 24px;
-      z-index: 800;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px 16px;
-      box-shadow: var(--shadow-sm);
-    }
+    /* No trips state */
+    .no-trips { text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 0.85rem; }
+    .no-trips .nt-icon { font-size: 2rem; margin-bottom: 10px; }
 
-    .legend-title {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-      font-weight: 500;
-    }
+    /* ── Toast ── */
+    .toast { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-primary); color: white; font-size: 0.82rem; padding: 10px 20px; border-radius: 30px; z-index: 2000; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    .legend-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.78rem;
-      color: var(--text-primary);
-      margin-bottom: 5px;
-    }
-
-    .legend-swatch {
-      width: 14px;
-      height: 14px;
-      border-radius: 3px;
-    }
-
-    /* ─── Toast notification ─────────────────────────────────────────── */
-    .toast {
-      position: absolute;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--text-primary);
-      color: white;
-      font-size: 0.82rem;
-      padding: 10px 20px;
-      border-radius: 30px;
-      z-index: 2000;
-      opacity: 0;
-      transition: opacity 0.2s, transform 0.2s;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* ─── Custom Leaflet pin ─────────────────────────────────────────── */
-    .custom-pin {
-      position: relative;
-      width: 28px;
-      height: 28px;
-    }
-
-    .custom-pin svg { width: 28px; height: 36px; }
-
-    /* ─── Loading overlay ────────────────────────────────────────────── */
-    #loading {
-      position: absolute;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      gap: 16px;
-      transition: opacity 0.4s;
-    }
-
+    /* ── Loading ── */
+    #loading { position: absolute; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; gap: 16px; transition: opacity 0.4s; }
     #loading.hidden { opacity: 0; pointer-events: none; }
-
-    .loading-logo {
-      font-family: var(--font-display);
-      font-size: 2rem;
-      font-weight: 600;
-    }
-
+    .loading-logo { font-family: var(--font-display); font-size: 2rem; font-weight: 600; }
     .loading-logo span { color: var(--accent); }
+    .loading-bar { width: 160px; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .loading-bar-inner { height: 100%; background: var(--accent); animation: loadBar 1.6s ease-in-out infinite; }
+    @keyframes loadBar { 0%{width:0%;margin-left:0%} 50%{width:60%;margin-left:20%} 100%{width:0%;margin-left:100%} }
+    .loading-sub { font-size: 0.78rem; color: var(--text-muted); letter-spacing: 0.06em; }
 
-    .loading-bar {
-      width: 160px;
-      height: 2px;
-      background: var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-
-    .loading-bar-inner {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 2px;
-      animation: loadBar 1.6s ease-in-out infinite;
-    }
-
-    @keyframes loadBar {
-      0%   { width: 0%;   margin-left: 0%; }
-      50%  { width: 60%;  margin-left: 20%; }
-      100% { width: 0%;   margin-left: 100%; }
-    }
-
-    .loading-sub {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      letter-spacing: 0.06em;
-    }
-
-    /* ─── Scrollbar ─────────────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   </style>
 </head>
-
 <body>
 <div class="app">
 
-  <!-- Header -->
   <header>
-    <div class="logo">atl<span>a</span>s</div>
-
+    <div class="logo">postc<span>a</span>rds</div>
     <div class="header-stats">
-      <div class="stat">
-        <span class="stat-num" id="stat-countries">0</span>
-        <span class="stat-label">Countries</span>
-      </div>
-      <div class="stat">
-        <span class="stat-num" id="stat-cities">0</span>
-        <span class="stat-label">Cities</span>
-      </div>
+      <div class="stat"><span class="stat-num" id="stat-countries">0</span><span class="stat-label">Countries</span></div>
+      <div class="stat"><span class="stat-num" id="stat-cities">0</span><span class="stat-label">Cities</span></div>
+      <div class="stat"><span class="stat-num" id="stat-trips">0</span><span class="stat-label">Trips</span></div>
     </div>
-
     <div class="header-actions">
-      <button class="btn btn-ghost" id="clear-btn">Clear all</button>
-      <button class="btn btn-primary" id="add-btn">+ Add place</button>
+      <a class="btn btn-ghost active" href="index.html">map</a>
+      <a class="btn btn-ghost" href="postcards.html">postcards</a>
+      <a class="btn btn-ghost" href="profile.html">profile</a>
+      <button class="btn btn-primary" id="add-btn">+ add place</button>
     </div>
   </header>
 
-  <!-- Map -->
   <div class="map-wrapper">
-
-    <!-- Loading -->
     <div id="loading">
-      <div class="loading-logo">atl<span>a</span>s</div>
+      <div class="loading-logo">postc<span>a</span>rds</div>
       <div class="loading-bar"><div class="loading-bar-inner"></div></div>
-      <div class="loading-sub">Loading your world…</div>
+      <div class="loading-sub">loading your world…</div>
     </div>
 
-    <!-- Map element -->
     <div id="map"></div>
 
     <!-- Search -->
     <div class="search-bar" id="search-bar">
       <span class="search-icon">🔍</span>
-      <input type="text" id="city-search" placeholder="Search a city to add…" autocomplete="off" />
-      <button class="search-btn" id="search-submit">Add pin</button>
+      <input type="text" id="city-search" placeholder="search a city to add…" autocomplete="off" />
+      <button class="search-btn" id="search-submit">add pin</button>
       <div class="suggestions" id="suggestions"></div>
     </div>
 
-    <!-- Legend -->
     <div class="legend">
-      <div class="legend-title">Map Key</div>
-      <div class="legend-row">
-        <div class="legend-swatch" style="background:var(--visited-fill); opacity:0.7;"></div>
-        <span>Visited country</span>
-      </div>
-      <div class="legend-row">
-        <div class="legend-swatch" style="background:var(--pin); border-radius:50%;"></div>
-        <span>City pin</span>
-      </div>
+      <div class="legend-title">map key</div>
+      <div class="legend-row"><div class="legend-swatch" style="background:#8962d8;opacity:0.7;"></div><span>visited country</span></div>
+      <div class="legend-row"><div class="legend-swatch" style="background:#8962d8;border-radius:50%;"></div><span>city pin</span></div>
     </div>
 
-    <!-- Map controls -->
     <div class="map-controls">
-      <button id="zoom-in" title="Zoom in">+</button>
-      <button id="zoom-out" title="Zoom out">−</button>
-      <button id="reset-view" title="Reset view">⊙</button>
+      <button id="zoom-in">+</button>
+      <button id="zoom-out">−</button>
+      <button id="reset-view">⊙</button>
     </div>
 
-    <!-- City detail panel -->
+    <!-- City Panel -->
     <div class="city-panel" id="city-panel">
       <div class="panel-header">
         <button class="panel-close" id="panel-close">✕</button>
-        <div class="panel-city" id="panel-city-name">City</div>
-        <div class="panel-country" id="panel-city-country">Country</div>
+        <div class="panel-city" id="panel-city-name"></div>
+        <div class="panel-country" id="panel-city-country"></div>
+
+        <div class="trip-selector-row">
+          <select class="trip-dropdown" id="trip-dropdown" onchange="switchTrip(this.value)"></select>
+          <button class="add-trip-btn" onclick="addNewTrip()">+ trip</button>
+        </div>
       </div>
-      <div class="panel-body">
 
-        <div>
-          <div class="panel-section-label">Trips</div>
-          <div class="dates-list" id="dates-list"></div>
-          <div class="add-date-row">
-            <input type="date" id="date-input" />
-            <button onclick="addDate()">Add</button>
-          </div>
-        </div>
+      <div class="panel-body" id="panel-body">
+        <!-- Filled dynamically -->
+      </div>
 
-        <div>
-          <div class="panel-section-label">Restaurants</div>
-          <textarea class="notes-textarea" id="notes-restaurants" placeholder="e.g. Nobu, a great ramen spot on 5th Ave…"></textarea>
-        </div>
-
-        <div>
-          <div class="panel-section-label">Attractions</div>
-          <textarea class="notes-textarea" id="notes-attractions" placeholder="e.g. Eiffel Tower, the old town market…"></textarea>
-        </div>
-
-        <div>
-          <div class="panel-section-label">Notes</div>
-          <textarea class="notes-textarea" id="notes-general" placeholder="Anything else worth remembering…"></textarea>
-        </div>
-
-        <button class="panel-save-btn" onclick="savePin()">Save</button>
+      <div class="panel-footer">
+        <button class="delete-trip-btn" onclick="deleteCurrentTrip()">delete trip</button>
+        <button class="panel-save-btn" onclick="saveCurrentTrip()">save</button>
       </div>
     </div>
 
-    <!-- Toast -->
     <div class="toast" id="toast"></div>
-
-  </div><!-- end map-wrapper -->
-</div><!-- end app -->
+    <input type="file" id="photo-file-input" accept="image/*" multiple />
+  </div>
+</div>
 
 <script>
 // ─── State ──────────────────────────────────────────────────────────────────
+// Pin: { name, country, lat, lng, marker, trips: [ { id, startDate, endDate, photos[], restaurants, attractions, notes } ] }
 const state = {
-  pins: {},          // { cityKey: { name, country, lat, lng, dates[], restaurants, attractions, notes } }
+  pins: {},
   visitedCountries: new Set(),
   countryLayers: {},
   activeKey: null,
-  countryGeoJSON: null,
+  activeTripId: null,
 };
 
-// ─── Init Map ────────────────────────────────────────────────────────────────
-const map = L.map('map', {
-  center: [20, 10],
-  zoom: 2,
-  zoomControl: false,
-  minZoom: 1.5,
-  maxZoom: 14,
-  worldCopyJump: true,
-});
+// ─── Map init ─────────────────────────────────────────────────────────────
+const map = L.map('map', { center:[20,10], zoom:2, zoomControl:false, minZoom:1.5, maxZoom:14, worldCopyJump:true });
 
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OSM contributors',
-  subdomains: 'abcd',
-  maxZoom: 19,
+  attribution:'&copy; <a href="https://carto.com/">CARTO</a> &copy; OSM contributors',
+  subdomains:'abcd', maxZoom:19,
 }).addTo(map);
 
-// Add subtle label layer on top
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-  subdomains: 'abcd',
-  maxZoom: 19,
-  pane: 'shadowPane',
+  subdomains:'abcd', maxZoom:19, pane:'shadowPane',
 }).addTo(map);
 
-// ─── Load Country GeoJSON ─────────────────────────────────────────────────
+// ─── GeoJSON ──────────────────────────────────────────────────────────────
 fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
   .then(r => r.json())
   .then(data => {
-    state.countryGeoJSON = data;
-    // Add a transparent base layer for click detection
     L.geoJSON(data, {
-      style: () => ({
-        fillColor: 'transparent',
-        fillOpacity: 0,
-        color: '#d0c8be',
-        weight: 0.5,
-        opacity: 0.6,
-      }),
+      style: () => ({ fillColor:'transparent', fillOpacity:0, color:'#d9cff0', weight:0.5, opacity:0.6 }),
       onEachFeature: (feature, layer) => {
         const name = feature.properties.ADMIN || feature.properties.name;
-        layer.on('click', () => toggleCountry(name, layer, feature));
+        // Hover highlight only — no click toggle
         layer.on('mouseover', function() {
-          if (!state.visitedCountries.has(name)) {
-            this.setStyle({ fillColor: '#e8ddd3', fillOpacity: 0.4 });
-          }
+          if (!state.visitedCountries.has(name))
+            this.setStyle({ fillColor:'#cab0ff', fillOpacity:0.35 });
         });
         layer.on('mouseout', function() {
-          if (!state.visitedCountries.has(name)) {
-            this.setStyle({ fillColor: 'transparent', fillOpacity: 0 });
-          }
+          if (!state.visitedCountries.has(name))
+            this.setStyle({ fillColor:'transparent', fillOpacity:0 });
+        });
+        // Click a country → zoom the map to its main landmass
+        layer.on('click', function() {
+          zoomToMainLandmass(this);
         });
         state.countryLayers[name] = layer;
       }
     }).addTo(map);
-
     document.getElementById('loading').classList.add('hidden');
     loadFromStorage();
   })
   .catch(() => {
     document.getElementById('loading').classList.add('hidden');
-    showToast('Could not load country data. Check your connection.');
+    showToast('could not load country data — check your connection');
   });
 
-// ─── Country toggle ───────────────────────────────────────────────────────
-function toggleCountry(name, layer, feature) {
-  if (state.visitedCountries.has(name)) {
-    state.visitedCountries.delete(name);
-    layer.setStyle({
-      fillColor: 'transparent', fillOpacity: 0,
-      color: '#d0c8be', weight: 0.5, opacity: 0.6,
-    });
+// ─── Zoom to a country's main landmass (ignore far-flung territories) ─────
+function zoomToMainLandmass(layer) {
+  const latlngs = layer.getLatLngs();
+  if (!latlngs || !latlngs.length) return;
+
+  // Build a list of outer rings, one per disjoint polygon
+  let outerRings;
+  if (latlngs[0][0] instanceof L.LatLng) {
+    outerRings = [latlngs[0]];                 // single polygon: [ring]
   } else {
-    state.visitedCountries.add(name);
-    layer.setStyle({
-      fillColor: '#c17f4a', fillOpacity: 0.35,
-      color: '#a0632f', weight: 1, opacity: 0.8,
-    });
-    showToast(`✓ ${name} marked as visited`);
+    outerRings = latlngs.map(poly => poly[0]); // multipolygon: each poly's outer ring
   }
-  updateStats();
-  saveToStorage();
+
+  // Pick the ring with the largest area (the main landmass)
+  let best = outerRings[0], bestArea = -1;
+  for (const ring of outerRings) {
+    const area = ringArea(ring);
+    if (area > bestArea) { bestArea = area; best = ring; }
+  }
+
+  map.fitBounds(L.latLngBounds(best), { padding:[40,40], maxZoom:6, animate:true, duration:1 });
 }
 
+// Approximate polygon area (degrees², latitude-corrected) — only used for ranking
+function ringArea(ring) {
+  const n = ring.length;
+  if (n < 3) return 0;
+  const meanLat = ring.reduce((s, p) => s + p.lat, 0) / n * Math.PI / 180;
+  const k = Math.cos(meanLat);
+  let area = 0;
+  for (let i = 0; i < n; i++) {
+    const a = ring[i], b = ring[(i + 1) % n];
+    area += (a.lng * k) * b.lat - (b.lng * k) * a.lat;
+  }
+  return Math.abs(area / 2);
+}
+
+// ─── Country shading (pin-driven only) ───────────────────────────────────
 function shadeCountry(name) {
   const layer = state.countryLayers[name];
   if (layer) {
     state.visitedCountries.add(name);
-    layer.setStyle({
-      fillColor: '#c17f4a', fillOpacity: 0.35,
-      color: '#a0632f', weight: 1, opacity: 0.8,
-    });
+    layer.setStyle({ fillColor:'#8962d8', fillOpacity:0.35, color:'#6e4cc4', weight:1, opacity:0.8 });
   }
 }
 
-// ─── Custom pin icon ──────────────────────────────────────────────────────
-function makePinIcon(color = '#c17f4a') {
-  const svg = `<svg viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 22 14 22S28 23.333 28 14C28 6.268 21.732 0 14 0z" fill="${color}"/>
-    <circle cx="14" cy="14" r="6" fill="white"/>
-  </svg>`;
-  return L.divIcon({
-    html: svg,
-    className: '',
-    iconSize: [28, 36],
-    iconAnchor: [14, 36],
-    popupAnchor: [0, -36],
-  });
+function unshadeCountryIfNoPins(countryName) {
+  const hasPins = Object.values(state.pins).some(p => p.country === countryName || p.shadedAs === countryName);
+  if (!hasPins) {
+    state.visitedCountries.delete(countryName);
+    const layer = state.countryLayers[countryName];
+    if (layer) layer.setStyle({ fillColor:'transparent', fillOpacity:0, color:'#d9cff0', weight:0.5, opacity:0.6 });
+    // also try fuzzy
+    const norm = s => s.toLowerCase().replace(/[^a-z]/g,'');
+    const match = Object.keys(state.countryLayers).find(k => norm(k) === norm(countryName));
+    if (match && match !== countryName) {
+      state.visitedCountries.delete(match);
+      state.countryLayers[match].setStyle({ fillColor:'transparent', fillOpacity:0, color:'#d9cff0', weight:0.5, opacity:0.6 });
+    }
+  }
 }
 
-// ─── City search via Nominatim ────────────────────────────────────────────
+// Common Nominatim → GeoJSON name mismatches
+const COUNTRY_ALIASES = {
+  'united states':               'United States of America',
+  'usa':                         'United States of America',
+  'us':                          'United States of America',
+  'uk':                          'United Kingdom',
+  'great britain':               'United Kingdom',
+  'england':                     'United Kingdom',
+  'scotland':                    'United Kingdom',
+  'wales':                       'United Kingdom',
+  'northern ireland':            'United Kingdom',
+  'russia':                      'Russia',
+  'south korea':                 'South Korea',
+  'republic of korea':           'South Korea',
+  'north korea':                 'North Korea',
+  "democratic people's republic of korea": 'North Korea',
+  'taiwan':                      'Taiwan',
+  'republic of china':           'Taiwan',
+  'syria':                       'Syria',
+  'iran':                        'Iran',
+  'czech republic':              'Czechia',
+  'czechia':                     'Czechia',
+  'congo':                       'Republic of the Congo',
+  'dr congo':                    'Democratic Republic of the Congo',
+  'democratic republic of the congo': 'Democratic Republic of the Congo',
+  'republic of the congo':       'Republic of the Congo',
+  'ivory coast':                 "Côte d'Ivoire",
+  "cote d'ivoire":               "Côte d'Ivoire",
+  'tanzania':                    'United Republic of Tanzania',
+  'vietnam':                     'Vietnam',
+  'viet nam':                    'Vietnam',
+  'bolivia':                     'Bolivia',
+  'venezuela':                   'Venezuela',
+  'laos':                        'Laos',
+  'brunei':                      'Brunei',
+  'moldova':                     'Moldova',
+  'north macedonia':             'North Macedonia',
+  'macedonia':                   'North Macedonia',
+  'eswatini':                    'eSwatini',
+  'swaziland':                   'eSwatini',
+  'cape verde':                  'Cabo Verde',
+  'myanmar':                     'Myanmar',
+  'burma':                       'Myanmar',
+  'timor-leste':                 'East Timor',
+  'east timor':                  'East Timor',
+};
+
+function findAndShadeCountry(countryName) {
+  // 1. Direct match
+  if (state.countryLayers[countryName]) { shadeCountry(countryName); return countryName; }
+
+  // 2. Alias map (case-insensitive)
+  const lower = countryName.toLowerCase().trim();
+  const aliased = COUNTRY_ALIASES[lower];
+  if (aliased && state.countryLayers[aliased]) { shadeCountry(aliased); return aliased; }
+
+  // 3. Exact case-insensitive match
+  const match = Object.keys(state.countryLayers).find(k => k.toLowerCase() === lower);
+  if (match) { shadeCountry(match); return match; }
+
+  // 4. Normalized (letters only) match
+  const norm = s => s.toLowerCase().replace(/[^a-z]/g,'');
+  const normName = norm(countryName);
+  const normMatch = Object.keys(state.countryLayers).find(k => norm(k) === normName);
+  if (normMatch) { shadeCountry(normMatch); return normMatch; }
+
+  // 5. Substring fallback — GeoJSON name contains Nominatim name or vice versa
+  const subMatch = Object.keys(state.countryLayers).find(k =>
+    norm(k).includes(normName) || normName.includes(norm(k))
+  );
+  if (subMatch) { shadeCountry(subMatch); return subMatch; }
+
+  return countryName;
+}
+
+// ─── Pin icon ─────────────────────────────────────────────────────────────
+function makePinIcon() {
+  const svg = `<svg viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg" width="28" height="36">
+    <path d="M14 0C6.268 0 0 6.268 0 14c0 9.333 14 22 14 22S28 23.333 28 14C28 6.268 21.732 0 14 0z" fill="#8962d8"/>
+    <circle cx="14" cy="14" r="6" fill="white"/>
+  </svg>`;
+  return L.divIcon({ html:svg, className:'', iconSize:[28,36], iconAnchor:[14,36], popupAnchor:[0,-36] });
+}
+
+// ─── Trip helpers ─────────────────────────────────────────────────────────
+function makeTripId() { return 'trip_' + Date.now() + '_' + Math.random().toString(36).slice(2,6); }
+
+function tripLabel(trip) {
+  if (!trip.startDate && !trip.endDate) return 'undated trip';
+  if (trip.startDate && !trip.endDate) return formatMonthYear(trip.startDate);
+  if (!trip.startDate && trip.endDate) return formatMonthYear(trip.endDate);
+  const s = formatMonthYear(trip.startDate);
+  const e = formatMonthYear(trip.endDate);
+  return s === e ? s : `${s} – ${e}`;
+}
+
+function formatMonthYear(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month:'short', year:'numeric' });
+}
+
+function formatDate(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+// ─── Search ───────────────────────────────────────────────────────────────
 const searchInput = document.getElementById('city-search');
 const suggestionsEl = document.getElementById('suggestions');
 let searchTimeout;
@@ -818,7 +511,7 @@ document.getElementById('search-submit').addEventListener('click', () => {
 async function fetchSuggestions(query) {
   try {
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&featuretype=city&accept-language=en`;
-    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    const res = await fetch(url, { headers:{'Accept-Language':'en'} });
     const results = await res.json();
     showSuggestions(results.filter(r => ['city','town','village','municipality'].includes(r.type) || r.class === 'place'));
   } catch { closeSuggestions(); }
@@ -826,242 +519,408 @@ async function fetchSuggestions(query) {
 
 function showSuggestions(results) {
   if (!results.length) { closeSuggestions(); return; }
-  suggestionsEl.innerHTML = results.slice(0, 5).map(r => {
+  suggestionsEl.innerHTML = results.slice(0,5).map(r => {
     const parts = r.display_name.split(', ');
     const city = parts[0];
-    const country = parts[parts.length - 1];
-    return `<div class="suggestion-item" onclick="selectSuggestion(${r.lat}, ${r.lon}, '${escapeAttr(city)}', '${escapeAttr(country)}')">
-      <span class="sug-icon">📍</span>
-      <span>${escapeHtml(city)}</span>
+    const country = parts[parts.length-1];
+    return `<div class="suggestion-item" onclick="selectSuggestion(${r.lat},${r.lon},'${escapeAttr(city)}','${escapeAttr(country)}')">
+      <span class="sug-icon">📍</span><span>${escapeHtml(city)}</span>
       <span class="sug-country">${escapeHtml(country)}</span>
     </div>`;
   }).join('');
   suggestionsEl.classList.add('open');
 }
 
-function closeSuggestions() {
-  suggestionsEl.classList.remove('open');
-  suggestionsEl.innerHTML = '';
-}
+function closeSuggestions() { suggestionsEl.classList.remove('open'); suggestionsEl.innerHTML = ''; }
 
 function selectSuggestion(lat, lon, city, country) {
-  closeSuggestions();
-  searchInput.value = '';
+  closeSuggestions(); searchInput.value = '';
   dropPin(parseFloat(lat), parseFloat(lon), city, country);
 }
 
 async function searchAndDrop(query) {
   try {
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=en`;
-    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    const res = await fetch(url, { headers:{'Accept-Language':'en'} });
     const [r] = await res.json();
-    if (!r) { showToast('City not found — try a more specific name'); return; }
+    if (!r) { showToast('city not found — try a more specific name'); return; }
     const parts = r.display_name.split(', ');
-    const city = parts[0];
-    const country = parts[parts.length - 1];
-    closeSuggestions();
-    searchInput.value = '';
-    dropPin(parseFloat(r.lat), parseFloat(r.lon), city, country);
-  } catch { showToast('Search failed — check your connection'); }
+    closeSuggestions(); searchInput.value = '';
+    dropPin(parseFloat(r.lat), parseFloat(r.lon), parts[0], parts[parts.length-1]);
+  } catch { showToast('search failed — check your connection'); }
 }
 
-// ─── Drop a pin ───────────────────────────────────────────────────────────
+// ─── Drop pin ─────────────────────────────────────────────────────────────
 function dropPin(lat, lng, cityName, countryName, existingData = null) {
   const key = `${cityName}__${countryName}`;
 
   if (state.pins[key]) {
-    // Pin exists — just open its panel
-    map.flyTo([lat, lng], Math.max(map.getZoom(), 6), { duration: 1 });
+    map.flyTo([lat, lng], Math.max(map.getZoom(), 6), { duration:1 });
     openPanel(key);
     return;
   }
 
-  const marker = L.marker([lat, lng], { icon: makePinIcon(), riseOnHover: true })
+  const marker = L.marker([lat, lng], { icon:makePinIcon(), riseOnHover:true })
     .addTo(map)
     .on('click', () => openPanel(key));
 
+  const shadedAs = findAndShadeCountry(countryName);
+
   state.pins[key] = {
-    name: cityName,
-    country: countryName,
-    lat, lng,
-    marker,
-    dates: existingData?.dates || [],
-    restaurants: existingData?.restaurants || '',
-    attractions: existingData?.attractions || '',
-    notes: existingData?.notes || '',
+    name: cityName, country: countryName, shadedAs,
+    lat, lng, marker,
+    trips: existingData?.trips || [],
   };
 
-  // Shade the country
-  findAndShadeCountry(countryName);
-
-  map.flyTo([lat, lng], Math.max(map.getZoom(), 6), { duration: 1.2 });
-  openPanel(key);
+  map.flyTo([lat, lng], Math.max(map.getZoom(), 6), { duration:1.2 });
+  openPanel(key, true); // true = open to new trip form
   updateStats();
   saveToStorage();
 }
 
-function findAndShadeCountry(countryName) {
-  // Try direct match first
-  if (state.countryLayers[countryName]) {
-    shadeCountry(countryName);
-    return;
-  }
-  // Fuzzy match (Nominatim country names vs GeoJSON names can differ slightly)
-  const norm = s => s.toLowerCase().replace(/[^a-z]/g,'');
-  const match = Object.keys(state.countryLayers).find(k => norm(k) === norm(countryName));
-  if (match) shadeCountry(match);
-}
-
 // ─── Panel ────────────────────────────────────────────────────────────────
-function openPanel(key) {
+function openPanel(key, addTrip = false) {
   const pin = state.pins[key];
   state.activeKey = key;
 
   document.getElementById('panel-city-name').textContent = pin.name;
   document.getElementById('panel-city-country').textContent = pin.country;
-  document.getElementById('notes-restaurants').value = pin.restaurants;
-  document.getElementById('notes-attractions').value = pin.attractions;
-  document.getElementById('notes-general').value = pin.notes;
-  renderDates(pin.dates);
+
+  renderTripDropdown(pin);
+
+  if (addTrip || pin.trips.length === 0) {
+    addNewTrip();
+  } else {
+    state.activeTripId = pin.trips[pin.trips.length - 1].id;
+    document.getElementById('trip-dropdown').value = state.activeTripId;
+    renderTripBody(state.activeTripId);
+  }
 
   document.getElementById('city-panel').classList.add('open');
 }
 
-function renderDates(dates) {
-  const el = document.getElementById('dates-list');
-  if (!dates.length) { el.innerHTML = '<div style="font-size:0.78rem;color:var(--text-muted)">No trips logged yet</div>'; return; }
-  el.innerHTML = dates.map((d, i) => `
-    <div class="date-tag">
-      📅 ${formatDate(d)}
-      <span style="cursor:pointer;margin-left:4px;opacity:0.6" onclick="removeDate(${i})">✕</span>
+function renderTripDropdown(pin) {
+  const sel = document.getElementById('trip-dropdown');
+  if (pin.trips.length === 0) {
+    sel.innerHTML = '<option value="">no trips yet</option>';
+    sel.style.display = 'none';
+    return;
+  }
+  sel.style.display = '';
+  sel.innerHTML = pin.trips.map(t =>
+    `<option value="${t.id}">${escapeHtml(tripLabel(t))}</option>`
+  ).join('');
+}
+
+function switchTrip(tripId) {
+  if (!tripId || !state.activeKey) return;
+  // Auto-save current before switching
+  saveCurrentTripSilent();
+  state.activeTripId = tripId;
+  renderTripBody(tripId);
+}
+
+function renderTripBody(tripId) {
+  const pin = state.pins[state.activeKey];
+  const trip = pin.trips.find(t => t.id === tripId);
+  if (!trip) return;
+
+  const body = document.getElementById('panel-body');
+  body.innerHTML = `
+    <!-- Date range -->
+    <div>
+      <div class="section-label">Trip dates</div>
+      <div class="date-range-row">
+        <div class="date-field">
+          <label>from</label>
+          <input type="date" id="trip-start" value="${trip.startDate || ''}" />
+        </div>
+        <div class="date-field">
+          <label>to</label>
+          <input type="date" id="trip-end" value="${trip.endDate || ''}" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Photos -->
+    <div>
+      <div class="section-label">Photos <span style="color:var(--text-muted);font-size:0.65rem;text-transform:none;letter-spacing:0">(up to 10)</span></div>
+      <div class="photos-grid" id="photos-grid"></div>
+      <button class="photo-upload-btn" id="photo-upload-btn" onclick="document.getElementById('photo-file-input').click()">
+        <span>＋</span> Add photos
+      </button>
+    </div>
+
+    <!-- Notes -->
+    <div>
+      <div class="section-label">Notes</div>
+      <textarea class="notes-textarea" id="notes-general" placeholder="anything else worth remembering…">${escapeHtml(trip.notes || '')}</textarea>
+    </div>
+
+    <!-- Restaurants -->
+    <div>
+      <div class="section-label">Restaurants</div>
+      <textarea class="notes-textarea" id="notes-restaurants" placeholder="e.g. Nobu, a great ramen spot on 5th Ave…">${escapeHtml(trip.restaurants || '')}</textarea>
+    </div>
+
+    <!-- Attractions -->
+    <div>
+      <div class="section-label">Attractions</div>
+      <textarea class="notes-textarea" id="notes-attractions" placeholder="e.g. Eiffel Tower, the old town market…">${escapeHtml(trip.attractions || '')}</textarea>
+    </div>
+  `;
+
+  renderPhotosGrid(trip);
+  updateUploadBtn(trip);
+
+  // Date change → refresh dropdown label live
+  document.getElementById('trip-start').addEventListener('change', () => refreshDropdownLabel());
+  document.getElementById('trip-end').addEventListener('change', () => refreshDropdownLabel());
+}
+
+function renderPhotosGrid(trip) {
+  const grid = document.getElementById('photos-grid');
+  if (!grid) return;
+  grid.innerHTML = (trip.photos || []).map((src, i) => `
+    <div class="photo-thumb">
+      <img src="${src}" alt="photo ${i+1}" />
+      <button class="photo-remove" onclick="removePhoto(${i})" title="Remove">✕</button>
     </div>`).join('');
 }
 
-function addDate() {
-  const input = document.getElementById('date-input');
-  if (!input.value || !state.activeKey) return;
-  const pin = state.pins[state.activeKey];
-  if (!pin.dates.includes(input.value)) {
-    pin.dates.push(input.value);
-    pin.dates.sort();
+function updateUploadBtn(trip) {
+  const btn = document.getElementById('photo-upload-btn');
+  if (!btn) return;
+  const count = (trip.photos || []).length;
+  if (count >= 10) {
+    btn.style.display = 'none';
+  } else {
+    btn.style.display = '';
+    btn.innerHTML = `<span>＋</span> Add photos <span style="color:var(--text-muted)">(${count}/10)</span>`;
   }
-  renderDates(pin.dates);
-  input.value = '';
+}
+
+function refreshDropdownLabel() {
+  if (!state.activeKey || !state.activeTripId) return;
+  const pin = state.pins[state.activeKey];
+  const trip = pin.trips.find(t => t.id === state.activeTripId);
+  if (!trip) return;
+  trip.startDate = document.getElementById('trip-start')?.value || '';
+  trip.endDate = document.getElementById('trip-end')?.value || '';
+  renderTripDropdown(pin);
+  document.getElementById('trip-dropdown').value = state.activeTripId;
+}
+
+// ─── Photo upload ─────────────────────────────────────────────────────────
+document.getElementById('photo-file-input').addEventListener('change', async function() {
+  if (!state.activeKey || !state.activeTripId) return;
+  const pin = state.pins[state.activeKey];
+  const trip = pin.trips.find(t => t.id === state.activeTripId);
+  if (!trip) return;
+
+  const files = Array.from(this.files);
+  const remaining = 10 - (trip.photos || []).length;
+  const toProcess = files.slice(0, remaining);
+
+  for (const file of toProcess) {
+    const base64 = await compressImage(file);
+    trip.photos = trip.photos || [];
+    trip.photos.push(base64);
+  }
+
+  if (files.length > remaining) showToast(`only ${remaining} photo(s) added — 10 max per trip`);
+
+  renderPhotosGrid(trip);
+  updateUploadBtn(trip);
+  saveToStorage();
+  this.value = '';
+});
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Resize + re-encode to JPEG to keep localStorage usage small
+function compressImage(file, maxDim = 1400, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width >= height) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        try { resolve(canvas.toDataURL('image/jpeg', quality)); }
+        catch (err) { resolve(e.target.result); } // fallback to original
+      };
+      img.onerror = () => resolve(e.target.result);
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function removePhoto(index) {
+  if (!state.activeKey || !state.activeTripId) return;
+  const pin = state.pins[state.activeKey];
+  const trip = pin.trips.find(t => t.id === state.activeTripId);
+  if (!trip) return;
+  trip.photos.splice(index, 1);
+  renderPhotosGrid(trip);
+  updateUploadBtn(trip);
   saveToStorage();
 }
 
-function removeDate(index) {
+// ─── Trip CRUD ────────────────────────────────────────────────────────────
+function addNewTrip() {
   if (!state.activeKey) return;
   const pin = state.pins[state.activeKey];
-  pin.dates.splice(index, 1);
-  renderDates(pin.dates);
+  // Auto-save current trip first
+  saveCurrentTripSilent();
+  const newTrip = { id: makeTripId(), startDate:'', endDate:'', photos:[], restaurants:'', attractions:'', notes:'' };
+  pin.trips.push(newTrip);
+  state.activeTripId = newTrip.id;
+  renderTripDropdown(pin);
+  document.getElementById('trip-dropdown').value = newTrip.id;
+  renderTripBody(newTrip.id);
+  updateStats();
   saveToStorage();
 }
 
-function savePin() {
+function saveCurrentTripSilent() {
+  if (!state.activeKey || !state.activeTripId) return;
+  const pin = state.pins[state.activeKey];
+  const trip = pin.trips.find(t => t.id === state.activeTripId);
+  if (!trip) return;
+  trip.startDate    = document.getElementById('trip-start')?.value || trip.startDate;
+  trip.endDate      = document.getElementById('trip-end')?.value || trip.endDate;
+  trip.restaurants  = document.getElementById('notes-restaurants')?.value || trip.restaurants;
+  trip.attractions  = document.getElementById('notes-attractions')?.value || trip.attractions;
+  trip.notes        = document.getElementById('notes-general')?.value || trip.notes;
+}
+
+function saveCurrentTrip() {
+  saveCurrentTripSilent();
   if (!state.activeKey) return;
   const pin = state.pins[state.activeKey];
-  pin.restaurants = document.getElementById('notes-restaurants').value;
-  pin.attractions = document.getElementById('notes-attractions').value;
-  pin.notes = document.getElementById('notes-general').value;
+  renderTripDropdown(pin);
+  document.getElementById('trip-dropdown').value = state.activeTripId;
   saveToStorage();
   showToast(`✓ ${pin.name} saved`);
   document.getElementById('city-panel').classList.remove('open');
   state.activeKey = null;
+  state.activeTripId = null;
+}
+
+function deleteCurrentTrip() {
+  if (!state.activeKey || !state.activeTripId) return;
+  const pin = state.pins[state.activeKey];
+  if (pin.trips.length === 1) {
+    if (!confirm(`delete this trip from ${pin.name}? this will also remove the pin.`)) return;
+    map.removeLayer(pin.marker);
+    const shadedAs = pin.shadedAs || pin.country;
+    delete state.pins[state.activeKey];
+    unshadeCountryIfNoPins(shadedAs);
+    document.getElementById('city-panel').classList.remove('open');
+    state.activeKey = null;
+    state.activeTripId = null;
+    updateStats();
+    saveToStorage();
+    return;
+  }
+  if (!confirm('delete this trip?')) return;
+  pin.trips = pin.trips.filter(t => t.id !== state.activeTripId);
+  state.activeTripId = pin.trips[pin.trips.length-1].id;
+  renderTripDropdown(pin);
+  document.getElementById('trip-dropdown').value = state.activeTripId;
+  renderTripBody(state.activeTripId);
+  updateStats();
+  saveToStorage();
+  showToast('trip deleted');
 }
 
 document.getElementById('panel-close').addEventListener('click', () => {
+  saveCurrentTripSilent();
+  saveToStorage();
   document.getElementById('city-panel').classList.remove('open');
   state.activeKey = null;
+  state.activeTripId = null;
 });
 
 // ─── Stats ────────────────────────────────────────────────────────────────
 function updateStats() {
+  const totalTrips = Object.values(state.pins).reduce((s, p) => s + p.trips.length, 0);
   document.getElementById('stat-countries').textContent = state.visitedCountries.size;
   document.getElementById('stat-cities').textContent = Object.keys(state.pins).length;
+  document.getElementById('stat-trips').textContent = totalTrips;
 }
 
 // ─── Controls ─────────────────────────────────────────────────────────────
 document.getElementById('zoom-in').addEventListener('click', () => map.zoomIn());
 document.getElementById('zoom-out').addEventListener('click', () => map.zoomOut());
-document.getElementById('reset-view').addEventListener('click', () => map.flyTo([20, 10], 2, { duration: 1 }));
-
+document.getElementById('reset-view').addEventListener('click', () => map.flyTo([20,10], 2, { duration:1 }));
 document.getElementById('add-btn').addEventListener('click', () => {
   searchInput.focus();
-  document.getElementById('search-bar').style.boxShadow = '0 0 0 3px rgba(193,127,74,0.25)';
-  setTimeout(() => document.getElementById('search-bar').style.boxShadow = '', 1200);
+  const bar = document.getElementById('search-bar');
+  bar.style.boxShadow = '0 0 0 3px rgba(137,98,216,0.28)';
+  setTimeout(() => bar.style.boxShadow = '', 1200);
 });
-
-document.getElementById('clear-btn').addEventListener('click', () => {
-  if (!confirm('Remove all pins and visited countries?')) return;
-  Object.values(state.pins).forEach(p => map.removeLayer(p.marker));
-  state.pins = {};
-  state.visitedCountries.clear();
-  Object.values(state.countryLayers).forEach(l => l.setStyle({
-    fillColor: 'transparent', fillOpacity: 0, color: '#d0c8be', weight: 0.5, opacity: 0.6,
-  }));
-  updateStats();
-  saveToStorage();
-  showToast('Map cleared');
-});
-
-// Close suggestions on outside click
 document.addEventListener('click', e => {
   if (!document.getElementById('search-bar').contains(e.target)) closeSuggestions();
 });
 
-// ─── Persistence (localStorage) ───────────────────────────────────────────
+// ─── Persistence ──────────────────────────────────────────────────────────
 function saveToStorage() {
   const data = {
     pins: Object.entries(state.pins).map(([k, p]) => ({
-      key: k, name: p.name, country: p.country, lat: p.lat, lng: p.lng,
-      dates: p.dates, restaurants: p.restaurants, attractions: p.attractions, notes: p.notes,
+      key:k, name:p.name, country:p.country, shadedAs:p.shadedAs,
+      lat:p.lat, lng:p.lng, trips:p.trips,
     })),
     visitedCountries: [...state.visitedCountries],
   };
-  localStorage.setItem('atlas-data', JSON.stringify(data));
+  try { localStorage.setItem('postcards-data-v1', JSON.stringify(data)); } catch(e) {
+    showToast('storage full — photos may not all save');
+  }
 }
 
 function loadFromStorage() {
   try {
-    const raw = localStorage.getItem('atlas-data');
+    const raw = localStorage.getItem('postcards-data-v1');
     if (!raw) return;
     const data = JSON.parse(raw);
-
-    // Restore visited countries (shading)
     data.visitedCountries?.forEach(name => shadeCountry(name));
-
-    // Restore pins
     data.pins?.forEach(p => {
-      const marker = L.marker([p.lat, p.lng], { icon: makePinIcon(), riseOnHover: true })
-        .addTo(map)
-        .on('click', () => openPanel(p.key));
-
+      const marker = L.marker([p.lat, p.lng], { icon:makePinIcon(), riseOnHover:true })
+        .addTo(map).on('click', () => openPanel(p.key));
       state.pins[p.key] = { ...p, marker };
     });
-
     updateStats();
-  } catch (e) {
-    console.warn('Could not restore saved data', e);
-  }
+  } catch(e) { console.warn('Could not restore saved data', e); }
 }
 
 // ─── Toast ────────────────────────────────────────────────────────────────
 let toastTimeout;
 function showToast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
+  el.textContent = msg; el.classList.add('show');
   clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => el.classList.remove('show'), 2400);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 2600);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
-function formatDate(d) {
-  return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function escapeAttr(s) { return s.replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeAttr(s) { return String(s).replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
 </script>
 </body>
 </html>

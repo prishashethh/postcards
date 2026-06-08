@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>my profile — postcards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #ffffff;
+      --surface:      #ffffff;
+      --card:         #f1ebff;
+      --border:       #e7ddf7;
+      --text-primary: #2a2336;
+      --text-muted:   #897fa3;
+      --accent:       #8962d8;
+      --accent-light: #ece2ff;
+      --accent-mid:   #cab0ff;
+      --accent-dark:  #6e4cc4;
+      --shadow-sm:    0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md:    0 4px 16px rgba(0,0,0,0.10);
+      --shadow-lg:    0 8px 32px rgba(0,0,0,0.13);
+      --radius:       14px;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+    }
+
+    html, body { min-height: 100%; background: var(--bg); font-family: var(--font-body); color: var(--text-primary); }
+
+    /* ── Top bar ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px; background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .brand { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; letter-spacing: 0.02em; text-decoration: none; color: var(--text-primary); }
+    .brand span { color: var(--accent); }
+    .nav-actions { display: flex; gap: 10px; align-items: center; }
+    .btn { font-family: var(--font-body); font-size: 0.8rem; font-weight: 500; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; line-height: 1; }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-ghost.active { background: var(--accent-light); color: var(--accent-dark); border-color: var(--accent-mid); font-weight: 600; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-light { background: var(--accent-light); color: var(--accent-dark); border: 1px solid transparent; }
+    .btn-light:hover { background: #ddccff; }
+
+    /* ── Layout ── */
+    .wrap { max-width: 860px; margin: 0 auto; padding: 32px 24px 80px; display: flex; flex-direction: column; gap: 26px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 28px; position: relative; }
+
+    /* ── Profile header ── */
+    .profile-head { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: start; }
+    .avatar-col { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .avatar {
+      width: 116px; height: 116px; border-radius: 50%; overflow: hidden;
+      background: var(--accent-light); color: var(--accent-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 2.4rem; font-weight: 600;
+      border: 1px solid var(--border); box-shadow: var(--shadow-sm); flex-shrink: 0;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .socials { display: flex; gap: 8px; }
+    .social-link {
+      width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; color: var(--text-muted);
+      transition: all 0.15s ease; text-decoration: none;
+    }
+    .social-link:hover { border-color: var(--accent); color: var(--accent); }
+    .social-link.disabled { opacity: 0.35; pointer-events: none; }
+    .social-link svg { width: 17px; height: 17px; }
+
+    .profile-info { padding-right: 36px; }
+    .profile-name { font-family: var(--font-display); font-size: 1.85rem; font-weight: 700; line-height: 1.1; margin-bottom: 8px; }
+    .profile-email { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 0.88rem; margin-bottom: 14px; }
+    .profile-email svg { width: 15px; height: 15px; }
+    .profile-bio { color: #4f4a44; font-size: 0.92rem; line-height: 1.6; margin-bottom: 20px; max-width: 60ch; }
+    .stats-row { display: flex; gap: 36px; }
+    .stat { display: flex; align-items: center; gap: 10px; }
+    .stat .stat-icon { width: 26px; height: 26px; color: var(--accent); display: flex; align-items: center; }
+    .stat .stat-icon svg { width: 22px; height: 22px; }
+    .stat .stat-num { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; line-height: 1; }
+    .stat .stat-label { font-size: 0.72rem; color: var(--text-muted); }
+
+    .edit-icon-btn {
+      position: absolute; top: 18px; right: 18px;
+      width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); cursor: pointer; color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;
+    }
+    .edit-icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .edit-icon-btn svg { width: 16px; height: 16px; }
+
+    /* ── Section header ── */
+    .section-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
+    .section-head .titles h2 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 9px; }
+    .section-head .titles h2 svg { width: 19px; height: 19px; color: var(--accent); }
+    .section-head .titles p { font-size: 0.85rem; color: var(--text-muted); margin-top: 3px; }
+
+    /* ── Top 5 grid ── */
+    .top5-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .trip-card {
+      position: relative; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden;
+      background: linear-gradient(135deg, var(--accent-mid), var(--accent)); box-shadow: var(--shadow-sm);
+      cursor: default;
+    }
+    .trip-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .trip-card .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(20,16,12,0.82) 0%, rgba(20,16,12,0.15) 55%, rgba(20,16,12,0.05) 100%); }
+    .trip-card .tc-text { position: absolute; left: 14px; right: 14px; bottom: 12px; color: #fff; }
+    .trip-card .tc-city { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; line-height: 1.1; }
+    .trip-card .tc-country { font-size: 0.82rem; opacity: 0.92; margin-top: 2px; }
+    .trip-card .tc-date { font-size: 0.72rem; opacity: 0.78; margin-top: 3px; }
+    .trip-card .tc-noimg { position: absolute; top: 12px; left: 14px; color: rgba(255,255,255,0.5); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
+
+    /* ── Bucket list ── */
+    .bucket-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .bucket-item { border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--bg); }
+    .bucket-item .bi-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .bucket-item .bi-head svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
+    .bucket-item .bi-city { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; line-height: 1.1; }
+    .bucket-item .bi-country { font-size: 0.78rem; color: var(--text-muted); }
+    .bucket-item .bi-why { font-size: 0.85rem; color: #4f4a44; line-height: 1.5; margin-top: 8px; }
+
+    /* ── Empty hints ── */
+    .empty-hint { color: var(--text-muted); font-size: 0.88rem; padding: 18px 4px; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200; background: rgba(26,24,21,0.45);
+      display: none; align-items: center; justify-content: center; padding: 24px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+      width: min(560px, 100%); max-height: 86vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h3 { font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 1.1rem; color: var(--text-muted); cursor: pointer; padding: 4px; line-height: 1; }
+    .modal-close:hover { color: var(--text-primary); }
+    .modal-body { padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .modal-footer { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+    .field label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+    .field input[type="text"], .field input[type="email"], .field input[type="url"], .field textarea {
+      width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px;
+      font-family: var(--font-body); font-size: 0.88rem; color: var(--text-primary); background: var(--bg); outline: none; transition: border-color 0.15s;
+    }
+    .field input:focus, .field textarea:focus { border-color: var(--accent); }
+    .field textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .avatar-edit { display: flex; align-items: center; gap: 16px; }
+    .avatar-edit .avatar { width: 72px; height: 72px; font-size: 1.5rem; }
+
+    /* trip picker */
+    .picker-search { position: relative; }
+    .picker-count { font-size: 0.78rem; color: var(--text-muted); margin-top: -4px; }
+    .picker-count b { color: var(--accent-dark); }
+    .trip-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 2px; }
+    .trip-row { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: all 0.12s ease; }
+    .trip-row.selected { border-color: var(--accent); background: var(--accent-light); }
+    .trip-row .tr-top { display: flex; align-items: center; gap: 10px; }
+    .trip-row .tr-check { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff; font-size: 11px; }
+    .trip-row.selected .tr-check { background: var(--accent); border-color: var(--accent); }
+    .trip-row .tr-name { font-weight: 600; font-size: 0.9rem; }
+    .trip-row .tr-meta { font-size: 0.76rem; color: var(--text-muted); margin-left: auto; }
+    .trip-row .tr-photos { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+    .tr-photo { width: 46px; height: 46px; border-radius: 6px; overflow: hidden; border: 2px solid transparent; cursor: pointer; position: relative; }
+    .tr-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .tr-photo.featured { border-color: var(--accent); }
+    .tr-photo.featured::after { content: '★'; position: absolute; top: 1px; right: 3px; color: #fff; font-size: 10px; text-shadow: 0 0 3px rgba(0,0,0,0.6); }
+    .tr-nophoto { font-size: 0.74rem; color: var(--text-muted); margin-top: 8px; font-style: italic; }
+
+    .bucket-edit-item { border: 1px solid var(--border); border-radius: 10px; padding: 14px; position: relative; display: flex; flex-direction: column; gap: 10px; }
+    .bucket-edit-item .remove { position: absolute; top: 8px; right: 10px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.95rem; }
+    .bucket-edit-item .remove:hover { color: #e05c5c; }
+    .add-row-btn { align-self: flex-start; }
+
+    @media (max-width: 640px) {
+      .profile-head { grid-template-columns: 1fr; }
+      .avatar-col { flex-direction: row; justify-content: flex-start; }
+      .profile-info { padding-right: 0; }
+      .top5-grid, .bucket-grid { grid-template-columns: 1fr 1fr; }
+      .stats-row { gap: 24px; }
+    }
+    ::-webkit-scrollbar { width: 7px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="brand" href="index.html">postc<span>a</span>rds</a>
+    <div class="nav-actions">
+      <a class="btn btn-ghost" href="index.html">map</a>
+      <a class="btn btn-ghost" href="postcards.html">postcards</a>
+      <a class="btn btn-ghost active" href="profile.html">profile</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- Profile header -->
+    <section class="card" id="profile-card">
+      <button class="edit-icon-btn" id="edit-profile-btn" title="Edit profile" aria-label="Edit profile"></button>
+      <div class="profile-head">
+        <div class="avatar-col">
+          <div class="avatar" id="avatar"></div>
+          <div class="socials" id="socials"></div>
+        </div>
+        <div class="profile-info">
+          <h1 class="profile-name" id="p-name"></h1>
+          <div class="profile-email" id="p-email"></div>
+          <p class="profile-bio" id="p-bio"></p>
+          <div class="stats-row" id="stats-row"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Top 5 -->
+    <section class="card">
+      <div class="section-head">
+        <div class="titles">
+          <h2>top 5 favorite trips</h2>
+          <p>my most memorable adventures around the world</p>
+        </div>
+        <button class="btn btn-light" id="edit-top5-btn">edit</button>
+      </div>
+      <div id="top5-container"></div>
+    </section>
+
+    <!-- Bucket list -->
+    <section class="card">
+      <div class="section-head">
+        <div class="titles">
+          <h2><span id="bucket-heart"></span>travel bucket list</h2>
+          <p>dream destinations waiting to be explored</p>
+        </div>
+        <button class="btn btn-light" id="edit-bucket-btn">edit</button>
+      </div>
+      <div id="bucket-container"></div>
+    </section>
+  </div>
+
+  <!-- Profile edit modal -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal">
+      <div class="modal-header"><h3>edit profile</h3><button class="modal-close" data-close>✕</button></div>
+      <div class="modal-body">
+        <div class="field">
+          <label>profile photo</label>
+          <div class="avatar-edit">
+            <div class="avatar" id="modal-avatar"></div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-light" id="avatar-upload-btn" type="button">upload photo</button>
+              <button class="btn btn-ghost" id="avatar-remove-btn" type="button">remove</button>
+            </div>
+          </div>
+        </div>
+        <div class="field"><label>name</label><input type="text" id="f-name" placeholder="your name" /></div>
+        <div class="field"><label>email</label><input type="email" id="f-email" placeholder="you@email.com" /></div>
+        <div class="field"><label>bio</label><textarea id="f-bio" placeholder="a little about your travels…"></textarea></div>
+        <div class="field"><label>instagram url</label><input type="url" id="f-instagram" placeholder="https://instagram.com/you" /></div>
+        <div class="field"><label>twitter / x url</label><input type="url" id="f-twitter" placeholder="https://x.com/you" /></div>
+        <div class="field"><label>linkedin url</label><input type="url" id="f-linkedin" placeholder="https://linkedin.com/in/you" /></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-close>cancel</button>
+        <button class="btn btn-primary" id="save-profile-btn">save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top 5 modal -->
+  <div class="modal-overlay" id="top5-modal">
+    <div class="modal">
+      <div class="modal-header"><h3>choose your top 5 trips</h3><button class="modal-close" data-close>✕</button></div>
+      <div class="modal-body">
+        <div class="field picker-search"><input type="text" id="trip-search" placeholder="search by city or country…" /></div>
+        <div class="picker-count">selected <b id="sel-count">0</b> / 5 · click a photo to feature it</div>
+        <div class="trip-list" id="trip-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-close>cancel</button>
+        <button class="btn btn-primary" id="save-top5-btn">save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bucket modal -->
+  <div class="modal-overlay" id="bucket-modal">
+    <div class="modal">
+      <div class="modal-header"><h3>travel bucket list</h3><button class="modal-close" data-close>✕</button></div>
+      <div class="modal-body" id="bucket-edit-list"></div>
+      <div class="modal-footer" style="justify-content:space-between">
+        <button class="btn btn-light add-row-btn" id="add-bucket-btn">+ add destination</button>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost" data-close>cancel</button>
+          <button class="btn btn-primary" id="save-bucket-btn">save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="avatar-file-input" accept="image/*" style="display:none" />
+
+<script>
+// ─── Icons ──────────────────────────────────────────────────────────────
+const ICONS = {
+  mail:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+  pin:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+  plane: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5a2.12 2.12 0 0 0-3-3L13 8 4.8 6.2a1 1 0 0 0-.9.3l-.7.7 6 3.3-2.4 2.4-2.3-.3-.9.9 3 1.8 1.8 3 .9-.9-.3-2.3 2.4-2.4 3.3 6 .7-.7a1 1 0 0 0 .3-.9Z"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>',
+  edit:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>',
+  twitter: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18.9 1.2h3.7l-8 9.1L24 22.8h-7.4l-5.8-7.6-6.6 7.6H.5l8.5-9.8L0 1.2h7.6l5.2 6.9 6.1-6.9Zm-1.3 19.4h2L6.5 3.3H4.4Z"/></svg>',
+  linkedin: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M4.98 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM3 9h4v12H3V9Zm6 0h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05C20.6 8.65 22 10.6 22 14.05V21h-4v-6.2c0-1.48-.03-3.38-2.06-3.38-2.06 0-2.38 1.6-2.38 3.27V21H9V9Z"/></svg>',
+};
+
+// ─── Storage keys ───────────────────────────────────────────────────────
+const DATA_KEY = 'postcards-data-v1';
+const PROFILE_KEY = 'postcards-profile-v1';
+
+let travel = { pins: [], visitedCountries: [] };
+let profile = defaultProfile();
+
+function defaultProfile() {
+  return {
+    name: 'your name', email: '', bio: '',
+    avatar: '',
+    socials: { instagram: '', twitter: '', linkedin: '' },
+    top5: [],   // [{ pinKey, tripId, photoIndex }]
+    bucket: [], // [{ city, country, why }]
+  };
+}
+
+function loadAll() {
+  try { const raw = localStorage.getItem(DATA_KEY); if (raw) travel = JSON.parse(raw); } catch {}
+  if (!travel.pins) travel.pins = [];
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    if (raw) profile = Object.assign(defaultProfile(), JSON.parse(raw));
+    if (!profile.socials) profile.socials = { instagram:'', twitter:'', linkedin:'' };
+  } catch {}
+}
+function saveProfile() {
+  try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); }
+  catch { alert('storage is full — could not save profile changes.'); }
+}
+
+// ─── Trip helpers ─────────────────────────────────────────────────────────
+function formatMonthYear(d) { return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month:'short', year:'numeric' }); }
+function tripLabel(trip) {
+  if (!trip.startDate && !trip.endDate) return 'undated';
+  if (trip.startDate && !trip.endDate) return formatMonthYear(trip.startDate);
+  if (!trip.startDate && trip.endDate) return formatMonthYear(trip.endDate);
+  const s = formatMonthYear(trip.startDate), e = formatMonthYear(trip.endDate);
+  return s === e ? s : `${s} – ${e}`;
+}
+function allTrips() {
+  const out = [];
+  travel.pins.forEach(pin => (pin.trips || []).forEach(trip => {
+    out.push({ pinKey: pin.key, tripId: trip.id, city: pin.name, country: pin.country, label: tripLabel(trip), photos: trip.photos || [] });
+  }));
+  return out;
+}
+function findTrip(pinKey, tripId) {
+  const pin = travel.pins.find(p => p.key === pinKey);
+  if (!pin) return null;
+  const trip = (pin.trips || []).find(t => t.id === tripId);
+  if (!trip) return null;
+  return { pinKey, tripId, city: pin.name, country: pin.country, label: tripLabel(trip), photos: trip.photos || [] };
+}
+function countriesCount() {
+  if (travel.visitedCountries && travel.visitedCountries.length) return travel.visitedCountries.length;
+  return new Set(travel.pins.map(p => p.shadedAs || p.country)).size;
+}
+function tripsCount() { return travel.pins.reduce((s, p) => s + (p.trips || []).length, 0); }
+
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function initials(name){ return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?'; }
+
+// ─── Render ─────────────────────────────────────────────────────────────
+function renderAll() {
+  document.getElementById('bucket-heart').innerHTML = ICONS.heart;
+  renderHeader(); renderTop5(); renderBucket();
+}
+
+function renderHeader() {
+  document.getElementById('edit-profile-btn').innerHTML = ICONS.edit;
+  const av = document.getElementById('avatar');
+  av.innerHTML = profile.avatar ? `<img src="${profile.avatar}" alt="${escapeHtml(profile.name)}" />` : escapeHtml(initials(profile.name));
+
+  document.getElementById('p-name').textContent = profile.name || 'your name';
+  const emailEl = document.getElementById('p-email');
+  emailEl.innerHTML = profile.email ? `${ICONS.mail}<span>${escapeHtml(profile.email)}</span>` : '';
+  document.getElementById('p-bio').textContent = profile.bio || '';
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat"><span class="stat-icon">${ICONS.pin}</span><div><div class="stat-num">${countriesCount()}</div><div class="stat-label">countries</div></div></div>
+    <div class="stat"><span class="stat-icon">${ICONS.plane}</span><div><div class="stat-num">${tripsCount()}</div><div class="stat-label">trips</div></div></div>`;
+
+  const s = profile.socials || {};
+  const link = (url, icon) => `<a class="social-link ${url ? '' : 'disabled'}" ${url ? `href="${escapeHtml(url)}" target="_blank" rel="noopener"` : ''}>${icon}</a>`;
+  document.getElementById('socials').innerHTML =
+    link(s.instagram, ICONS.instagram) + link(s.twitter, ICONS.twitter) + link(s.linkedin, ICONS.linkedin);
+}
+
+function renderTop5() {
+  const c = document.getElementById('top5-container');
+  const items = (profile.top5 || []).map(sel => ({ sel, trip: findTrip(sel.pinKey, sel.tripId) })).filter(x => x.trip);
+  if (!items.length) { c.innerHTML = `<div class="empty-hint">no favorites yet — click <b>edit</b> to pick up to 5 trips.</div>`; return; }
+  c.innerHTML = `<div class="top5-grid">${items.map(({ sel, trip }) => {
+    const idx = Math.min(sel.photoIndex || 0, Math.max(0, trip.photos.length - 1));
+    const img = trip.photos.length ? `<img src="${trip.photos[idx]}" alt="${escapeHtml(trip.city)}" />` : `<div class="tc-noimg">no photo</div>`;
+    return `<div class="trip-card">
+      ${img}<div class="overlay"></div>
+      <div class="tc-text">
+        <div class="tc-city">${escapeHtml(trip.city)}</div>
+        <div class="tc-country">${escapeHtml(trip.country || '')}</div>
+        <div class="tc-date">${escapeHtml(trip.label)}</div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderBucket() {
+  const c = document.getElementById('bucket-container');
+  const items = profile.bucket || [];
+  if (!items.length) { c.innerHTML = `<div class="empty-hint">no dream destinations yet — click <b>edit</b> to add up to 3.</div>`; return; }
+  c.innerHTML = `<div class="bucket-grid">${items.map(b => `
+    <div class="bucket-item">
+      <div class="bi-head">${ICONS.heart}<div><div class="bi-city">${escapeHtml(b.city || 'somewhere')}</div><div class="bi-country">${escapeHtml(b.country || '')}</div></div></div>
+      <div class="bi-why">${escapeHtml(b.why || '')}</div>
+    </div>`).join('')}</div>`;
+}
+
+// ─── Modal plumbing ───────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov || e.target.hasAttribute('data-close')) ov.classList.remove('open'); });
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open')); });
+
+// ─── Image compression (shared with the rest of the app) ──────────────────
+function compressImage(file, maxDim = 600, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width >= height) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        try { resolve(canvas.toDataURL('image/jpeg', quality)); } catch { resolve(e.target.result); }
+      };
+      img.onerror = () => resolve(e.target.result);
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─── Profile edit ─────────────────────────────────────────────────────────
+let draftAvatar = '';
+document.getElementById('edit-profile-btn').addEventListener('click', () => {
+  draftAvatar = profile.avatar || '';
+  document.getElementById('f-name').value = profile.name || '';
+  document.getElementById('f-email').value = profile.email || '';
+  document.getElementById('f-bio').value = profile.bio || '';
+  document.getElementById('f-instagram').value = profile.socials.instagram || '';
+  document.getElementById('f-twitter').value = profile.socials.twitter || '';
+  document.getElementById('f-linkedin').value = profile.socials.linkedin || '';
+  renderModalAvatar();
+  openModal('profile-modal');
+});
+function renderModalAvatar() {
+  const el = document.getElementById('modal-avatar');
+  const name = document.getElementById('f-name').value || profile.name;
+  el.innerHTML = draftAvatar ? `<img src="${draftAvatar}" alt="" />` : escapeHtml(initials(name));
+}
+document.getElementById('f-name').addEventListener('input', renderModalAvatar);
+document.getElementById('avatar-upload-btn').addEventListener('click', () => document.getElementById('avatar-file-input').click());
+document.getElementById('avatar-remove-btn').addEventListener('click', () => { draftAvatar = ''; renderModalAvatar(); });
+document.getElementById('avatar-file-input').addEventListener('change', async function() {
+  if (this.files[0]) { draftAvatar = await compressImage(this.files[0]); renderModalAvatar(); }
+  this.value = '';
+});
+document.getElementById('save-profile-btn').addEventListener('click', () => {
+  profile.name = document.getElementById('f-name').value.trim() || 'Your Name';
+  profile.email = document.getElementById('f-email').value.trim();
+  profile.bio = document.getElementById('f-bio').value.trim();
+  profile.avatar = draftAvatar;
+  profile.socials = {
+    instagram: document.getElementById('f-instagram').value.trim(),
+    twitter: document.getElementById('f-twitter').value.trim(),
+    linkedin: document.getElementById('f-linkedin').value.trim(),
+  };
+  saveProfile(); renderHeader(); closeModal('profile-modal');
+});
+
+// ─── Top 5 edit ───────────────────────────────────────────────────────────
+let t5draft = [];
+document.getElementById('edit-top5-btn').addEventListener('click', () => {
+  t5draft = (profile.top5 || []).map(s => ({ ...s })).filter(s => findTrip(s.pinKey, s.tripId));
+  document.getElementById('trip-search').value = '';
+  renderTripList('');
+  openModal('top5-modal');
+});
+document.getElementById('trip-search').addEventListener('input', e => renderTripList(e.target.value.trim().toLowerCase()));
+
+function selIndex(pinKey, tripId) { return t5draft.findIndex(s => s.pinKey === pinKey && s.tripId === tripId); }
+
+function renderTripList(query) {
+  const list = document.getElementById('trip-list');
+  let trips = allTrips();
+  if (query) trips = trips.filter(t => (t.city + ' ' + (t.country||'')).toLowerCase().includes(query));
+  document.getElementById('sel-count').textContent = t5draft.length;
+
+  if (!trips.length) { list.innerHTML = `<div class="empty-hint">${travel.pins.length ? 'no trips match your search.' : 'no trips yet — add some on the map first.'}</div>`; return; }
+
+  list.innerHTML = trips.map(t => {
+    const i = selIndex(t.pinKey, t.tripId);
+    const selected = i !== -1;
+    const featuredIdx = selected ? (t5draft[i].photoIndex || 0) : 0;
+    const photos = selected ? (t.photos.length
+      ? `<div class="tr-photos">${t.photos.map((src, pi) => `<div class="tr-photo ${pi === featuredIdx ? 'featured' : ''}" data-pin="${escapeHtml(t.pinKey)}" data-trip="${escapeHtml(t.tripId)}" data-pi="${pi}"><img src="${src}" alt="" /></div>`).join('')}</div>`
+      : `<div class="tr-nophoto">no photos for this trip — card will show a colored background.</div>`) : '';
+    return `<div class="trip-row ${selected ? 'selected' : ''}" data-pin="${escapeHtml(t.pinKey)}" data-trip="${escapeHtml(t.tripId)}">
+      <div class="tr-top">
+        <span class="tr-check">${selected ? '✓' : ''}</span>
+        <span class="tr-name">${escapeHtml(t.city)}</span>
+        <span class="tr-meta">${escapeHtml(t.country || '')} · ${escapeHtml(t.label)}</span>
+      </div>${photos}
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('trip-list').addEventListener('click', e => {
+  const photo = e.target.closest('.tr-photo');
+  if (photo) {
+    const i = selIndex(photo.dataset.pin, photo.dataset.trip);
+    if (i !== -1) { t5draft[i].photoIndex = parseInt(photo.dataset.pi, 10); renderTripList(document.getElementById('trip-search').value.trim().toLowerCase()); }
+    return;
+  }
+  const row = e.target.closest('.trip-row');
+  if (!row) return;
+  const i = selIndex(row.dataset.pin, row.dataset.trip);
+  if (i !== -1) { t5draft.splice(i, 1); }
+  else {
+    if (t5draft.length >= 5) { return; }
+    t5draft.push({ pinKey: row.dataset.pin, tripId: row.dataset.trip, photoIndex: 0 });
+  }
+  renderTripList(document.getElementById('trip-search').value.trim().toLowerCase());
+});
+document.getElementById('save-top5-btn').addEventListener('click', () => {
+  profile.top5 = t5draft.map(s => ({ ...s }));
+  saveProfile(); renderTop5(); closeModal('top5-modal');
+});
+
+// ─── Bucket list edit ─────────────────────────────────────────────────────
+let bktdraft = [];
+document.getElementById('edit-bucket-btn').addEventListener('click', () => {
+  bktdraft = (profile.bucket || []).map(b => ({ ...b }));
+  renderBucketEditor();
+  openModal('bucket-modal');
+});
+function renderBucketEditor() {
+  const c = document.getElementById('bucket-edit-list');
+  if (!bktdraft.length) c.innerHTML = `<div class="empty-hint">add up to 3 dream destinations.</div>`;
+  else c.innerHTML = bktdraft.map((b, i) => `
+    <div class="bucket-edit-item">
+      <button class="remove" data-rm="${i}" title="remove">✕</button>
+      <div class="field-row">
+        <div class="field"><label>city</label><input type="text" data-i="${i}" data-k="city" value="${escapeHtml(b.city || '')}" placeholder="e.g. reykjavik" /></div>
+        <div class="field"><label>country</label><input type="text" data-i="${i}" data-k="country" value="${escapeHtml(b.country || '')}" placeholder="e.g. iceland" /></div>
+      </div>
+      <div class="field"><label>why i want to go</label><textarea data-i="${i}" data-k="why" placeholder="what draws you there…">${escapeHtml(b.why || '')}</textarea></div>
+    </div>`).join('');
+  document.getElementById('add-bucket-btn').style.display = bktdraft.length >= 3 ? 'none' : '';
+}
+function syncBucketDraftFromInputs() {
+  document.querySelectorAll('#bucket-edit-list [data-i]').forEach(el => {
+    const i = +el.dataset.i; if (bktdraft[i]) bktdraft[i][el.dataset.k] = el.value;
+  });
+}
+document.getElementById('bucket-edit-list').addEventListener('click', e => {
+  const rm = e.target.closest('[data-rm]');
+  if (rm) { syncBucketDraftFromInputs(); bktdraft.splice(+rm.dataset.rm, 1); renderBucketEditor(); }
+});
+document.getElementById('add-bucket-btn').addEventListener('click', () => {
+  if (bktdraft.length >= 3) return;
+  syncBucketDraftFromInputs();
+  bktdraft.push({ city: '', country: '', why: '' });
+  renderBucketEditor();
+});
+document.getElementById('save-bucket-btn').addEventListener('click', () => {
+  syncBucketDraftFromInputs();
+  profile.bucket = bktdraft.map(b => ({ city:(b.city||'').trim(), country:(b.country||'').trim(), why:(b.why||'').trim() }))
+                           .filter(b => b.city || b.country || b.why);
+  saveProfile(); renderBucket(); closeModal('bucket-modal');
+});
+
+// ─── Init ─────────────────────────────────────────────────────────────────
+loadAll();
+renderAll();
+</script>
+</body>
+</html>

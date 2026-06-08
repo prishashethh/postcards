@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>my postcards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=Caveat:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #ffffff;
+      --paper:        #ece2ff;
+      --paper-2:      #ddd0f7;
+      --ink:          #2a2336;
+      --ink-soft:     #6f6486;
+      --accent:       #8962d8;
+      --accent-dark:  #6e4cc4;
+      --accent-mid:   #cab0ff;
+      --accent-light: #ece2ff;
+      --rule:         #cdbcef;
+      --rule-soft:    #ddd2f2;
+      --shadow-lg:    0 16px 34px rgba(60,44,96,0.18);
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+      --font-hand:    'Caveat', 'Segoe Script', cursive;
+    }
+
+    html, body {
+      min-height: 100%;
+      font-family: var(--font-body);
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--rule-soft);
+    }
+    .brand { font-family: var(--font-display); font-size: 1.2rem; font-weight: 600; letter-spacing: 0.02em; text-decoration: none; color: var(--ink); }
+    .brand span { color: var(--accent); }
+    .nav-actions { display: flex; gap: 10px; align-items: center; }
+    .btn {
+      font-family: var(--font-body); font-size: 0.8rem; font-weight: 500;
+      padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.15s ease;
+      display: inline-flex; align-items: center; gap: 6px; text-decoration: none; line-height: 1;
+      background: transparent; color: var(--ink-soft); border: 1px solid var(--rule-soft);
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .btn.active { background: var(--accent-light); color: var(--accent-dark); border-color: var(--accent-mid); font-weight: 600; }
+
+    /* ── Layout ── */
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 44px 24px 80px; }
+    .deck { display: flex; flex-direction: column; gap: 56px; }
+
+    /* ── Postcard ── */
+    .postcard {
+      position: relative;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.35), rgba(0,0,0,0.02)),
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.012) 0 1px, transparent 1px 4px),
+        var(--paper);
+      border-radius: 4px;
+      box-shadow: var(--shadow-lg);
+      padding: 14px;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .postcard:hover { transform: translateY(-3px); box-shadow: 0 22px 44px rgba(40,32,22,0.22); }
+    /* dashed "perforation" frame */
+    .postcard::after {
+      content: ""; position: absolute; inset: 8px;
+      border: 2px dashed rgba(43,38,34,0.18);
+      border-radius: 3px; pointer-events: none;
+    }
+
+    .pc-inner {
+      position: relative;
+      display: grid; grid-template-columns: 1fr 1px 1fr;
+      gap: 0; min-height: 360px;
+      padding: 8px;
+    }
+    /* center divider (double rule like a real postcard) */
+    .pc-divider {
+      width: 1px; align-self: stretch; margin: 6px 0;
+      background: var(--ink-soft);
+      position: relative; opacity: 0.55;
+    }
+    .pc-divider::before {
+      content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 1px;
+      background: var(--ink-soft); opacity: 0.6;
+    }
+
+    /* Left side */
+    .pc-left { padding: 14px 26px 14px 14px; display: flex; flex-direction: column; }
+    .pc-photos { display: flex; gap: 14px; margin-bottom: 26px; min-height: 140px; }
+    .photo-print {
+      width: 168px; height: 134px; background: #fff;
+      padding: 7px 7px 22px; border-radius: 2px;
+      box-shadow: 0 4px 12px rgba(40,32,22,0.22);
+      cursor: pointer; transition: transform 0.18s ease, box-shadow 0.18s ease;
+      position: relative;
+    }
+    .photo-print:first-child { transform: rotate(-3deg); }
+    .photo-print:nth-child(2) { transform: rotate(2.5deg); margin-top: 10px; }
+    .photo-print:hover { transform: rotate(0) scale(1.04); box-shadow: 0 8px 20px rgba(40,32,22,0.30); z-index: 3; }
+    .photo-print img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-more {
+      position: absolute; bottom: 6px; right: 6px;
+      background: rgba(43,38,34,0.82); color: #fff;
+      font-family: var(--font-body); font-size: 0.62rem; font-weight: 500;
+      padding: 2px 7px; border-radius: 20px;
+    }
+
+    .add-photos-btn {
+      width: 100%; max-width: 280px; min-height: 134px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      border: 1.5px dashed var(--accent); border-radius: 8px;
+      background: rgba(137,98,216,0.10); color: var(--accent-dark);
+      font-family: var(--font-body); font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; transition: all 0.15s ease;
+    }
+    .add-photos-btn:hover { background: rgba(137,98,216,0.18); }
+    .add-photos-btn .plus { font-size: 1.5rem; line-height: 1; }
+
+    .pc-title {
+      font-family: var(--font-display); font-weight: 700;
+      font-size: clamp(1.6rem, 3.4vw, 2.35rem); line-height: 1.02;
+      text-transform: none; letter-spacing: 0.01em;
+      color: var(--ink); margin-top: auto;
+    }
+    .pc-title .from { display: block; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.32em; color: var(--accent-dark); margin-bottom: 8px; }
+    .pc-country { margin-top: 12px; font-size: 0.72rem; letter-spacing: 0.18em; text-transform: none; color: var(--ink-soft); }
+    .pc-dates { margin-top: 6px; font-family: var(--font-hand); font-size: 1.15rem; color: var(--accent-dark); }
+
+    /* Right side — top padding clears the postmark stamp so notes never overlap it */
+    .pc-right { padding: 82px 14px 14px 26px; position: relative; display: flex; flex-direction: column; gap: 16px; }
+    .pc-section .lbl {
+      font-family: var(--font-body); font-size: 0.6rem; text-transform: lowercase;
+      letter-spacing: 0.16em; color: var(--accent-dark); font-weight: 600;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+    }
+    .pc-section .lbl::after { content: ""; flex: 1; height: 1px; background: var(--rule); opacity: 0.7; }
+    .pc-section .val {
+      font-family: var(--font-hand); font-size: 1.18rem; line-height: 1.35;
+      color: var(--ink); white-space: pre-wrap; word-break: break-word;
+    }
+    .pc-section .val.empty { color: var(--ink-soft); opacity: 0.55; font-style: italic; }
+
+    /* decorative postmark stamp top-right of message side */
+    .pc-stamp {
+      position: absolute; top: 12px; right: 12px; width: 50px; height: 62px;
+      border: 2px solid var(--accent); border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      background: repeating-linear-gradient(135deg, rgba(137,98,216,0.12) 0 6px, transparent 6px 12px);
+      transform: rotate(4deg); opacity: 0.85;
+    }
+    .pc-stamp .letter { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; color: var(--accent-dark); }
+    .pc-stamp::before {
+      content: ""; position: absolute; inset: 3px;
+      border: 1px dotted var(--accent); border-radius: 2px;
+    }
+
+    /* ── Empty state ── */
+    .empty-state { text-align: center; padding: 90px 20px; color: #4a443c; }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 16px; }
+    .empty-state h2 { font-family: var(--font-display); font-size: 1.6rem; margin-bottom: 8px; color: var(--ink); }
+    .empty-state p { font-size: 0.9rem; color: #5a544b; margin-bottom: 22px; }
+    .empty-state a {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #fff; text-decoration: none;
+      padding: 11px 22px; border-radius: 8px; font-weight: 500; font-size: 0.9rem;
+      transition: background 0.15s;
+    }
+    .empty-state a:hover { background: var(--accent-dark); }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(20,17,14,0.92);
+      display: none; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.2s ease;
+    }
+    .lightbox.open { display: flex; opacity: 1; }
+    .lb-img-wrap { max-width: 86vw; max-height: 82vh; display: flex; align-items: center; justify-content: center; }
+    .lb-img-wrap img {
+      max-width: 86vw; max-height: 82vh; object-fit: contain;
+      border-radius: 4px; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+      background: #fff; padding: 8px;
+    }
+    .lb-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 52px; height: 52px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.25);
+      font-size: 1.6rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .lb-btn:hover { background: rgba(255,255,255,0.25); }
+    .lb-prev { left: 28px; }
+    .lb-next { right: 28px; }
+    .lb-close {
+      position: absolute; top: 24px; right: 28px;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.25);
+      font-size: 1.3rem; cursor: pointer; transition: background 0.15s;
+    }
+    .lb-close:hover { background: rgba(255,255,255,0.25); }
+    .lb-counter {
+      position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+      color: #f3efe6; font-size: 0.85rem; letter-spacing: 0.08em;
+      background: rgba(0,0,0,0.4); padding: 6px 16px; border-radius: 20px;
+    }
+    .lb-caption { position: absolute; top: 28px; left: 28px; color: #f3efe6; font-family: var(--font-display); font-size: 1rem; }
+
+    @media (max-width: 640px) {
+      .pc-inner { grid-template-columns: 1fr; min-height: 0; }
+      .pc-divider { display: none; }
+      .pc-left { padding: 14px; }
+      .pc-right { padding: 22px 14px 14px; border-top: 1px dashed var(--rule); margin-top: 8px; }
+      .lb-prev { left: 8px; } .lb-next { right: 8px; }
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="brand" href="index.html">postc<span>a</span>rds</a>
+    <div class="nav-actions">
+      <a class="btn" href="index.html">map</a>
+      <a class="btn active" href="postcards.html">postcards</a>
+      <a class="btn" href="profile.html">profile</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="deck" id="deck"></div>
+    <div id="empty-state"></div>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <button class="lb-close" id="lb-close" aria-label="Close">✕</button>
+    <button class="lb-btn lb-prev" id="lb-prev" aria-label="Previous">‹</button>
+    <div class="lb-img-wrap"><img id="lb-img" src="" alt="" /></div>
+    <button class="lb-btn lb-next" id="lb-next" aria-label="Next">›</button>
+    <div class="lb-caption" id="lb-caption"></div>
+    <div class="lb-counter" id="lb-counter"></div>
+  </div>
+
+  <input type="file" id="photo-file-input" accept="image/*" multiple style="display:none" />
+
+<script>
+const STORAGE_KEY = 'postcards-data-v1';
+
+// In-memory copy of saved data so we can mutate (add photos) and persist.
+let data = { pins: [], visitedCountries: [] };
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) data = JSON.parse(raw);
+  } catch (e) { console.warn('Could not read saved data', e); }
+  if (!data.pins) data.pins = [];
+}
+
+function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+  catch (e) { alert('storage is full — could not save the new photos.'); }
+}
+
+// ── Date helpers (match the map view) ──
+function tripDateValue(trip) {
+  const d = trip.startDate || trip.endDate;
+  return d ? new Date(d + 'T00:00:00').getTime() : null;
+}
+function formatMonthYear(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month:'short', year:'numeric' });
+}
+function tripLabel(trip) {
+  if (!trip.startDate && !trip.endDate) return 'undated';
+  if (trip.startDate && !trip.endDate) return formatMonthYear(trip.startDate);
+  if (!trip.startDate && trip.endDate) return formatMonthYear(trip.endDate);
+  const s = formatMonthYear(trip.startDate), e = formatMonthYear(trip.endDate);
+  return s === e ? s : `${s} – ${e}`;
+}
+
+// ── Build the sorted list of postcards (one per trip) ──
+function buildEntries() {
+  const entries = [];
+  data.pins.forEach(pin => {
+    (pin.trips || []).forEach(trip => {
+      entries.push({ pinKey: pin.key, city: pin.name, country: pin.country, trip });
+    });
+  });
+  const undated = entries.filter(e => tripDateValue(e.trip) === null);
+  const dated = entries.filter(e => tripDateValue(e.trip) !== null)
+                       .sort((a, b) => tripDateValue(b.trip) - tripDateValue(a.trip)); // newest first
+  return [...undated, ...dated]; // undated at the start
+}
+
+// ── Render ──
+function render() {
+  const deck = document.getElementById('deck');
+  const emptyEl = document.getElementById('empty-state');
+  const entries = buildEntries();
+
+  if (!entries.length) {
+    deck.innerHTML = '';
+    emptyEl.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">💌</div>
+        <h2>no postcards yet</h2>
+        <p>add a place and a trip on the map, and it'll show up here as a postcard.</p>
+        <a href="index.html"><span>←</span> go to the map</a>
+      </div>`;
+    return;
+  }
+  emptyEl.innerHTML = '';
+  deck.innerHTML = entries.map((e, i) => renderCard(e, i)).join('');
+}
+
+function renderCard(entry, idx) {
+  const { city, country, trip } = entry;
+  const photos = trip.photos || [];
+  const photoArea = photos.length
+    ? renderPhotos(photos, idx, city)
+    : `<button class="add-photos-btn" data-action="add" data-idx="${idx}">
+         <span class="plus">＋</span> add photos
+       </button>`;
+
+  const dates = tripLabel(trip);
+  const datesHtml = (trip.startDate || trip.endDate) ? `<div class="pc-dates">${escapeHtml(dates)}</div>` : '';
+  const stampLetter = (country || city || '?').trim().charAt(0).toUpperCase();
+
+  return `
+  <article class="postcard">
+    <div class="pc-inner">
+      <div class="pc-left">
+        <div class="pc-photos">${photoArea}</div>
+        <h2 class="pc-title"><span class="from">postcard from</span>${escapeHtml(city)}</h2>
+        <div class="pc-country">${escapeHtml(country || '')}</div>
+        ${datesHtml}
+      </div>
+
+      <div class="pc-divider"></div>
+
+      <div class="pc-right">
+        <div class="pc-stamp"><span class="letter">${escapeHtml(stampLetter)}</span></div>
+        ${section('Notes', trip.notes)}
+        ${section('Restaurants', trip.restaurants)}
+        ${section('Tourist attractions', trip.attractions)}
+      </div>
+    </div>
+  </article>`;
+}
+
+function renderPhotos(photos, idx, city) {
+  const shown = photos.slice(0, 2);
+  return shown.map((src, j) => {
+    const more = (j === shown.length - 1 && photos.length > 2)
+      ? `<span class="photo-more">+${photos.length - 2}</span>` : '';
+    return `<div class="photo-print" data-action="open" data-idx="${idx}" data-start="${j}">
+              <img src="${src}" alt="Photo from ${escapeHtml(city)}" />${more}
+            </div>`;
+  }).join('');
+}
+
+function section(label, value) {
+  const v = (value || '').trim();
+  const body = v
+    ? `<div class="val">${escapeHtml(v)}</div>`
+    : `<div class="val empty">nothing noted</div>`;
+  return `<div class="pc-section"><div class="lbl">${label}</div>${body}</div>`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Click handling (delegated) ──
+document.getElementById('deck').addEventListener('click', e => {
+  const target = e.target.closest('[data-action]');
+  if (!target) return;
+  const action = target.dataset.action;
+  const idx = parseInt(target.dataset.idx, 10);
+  const entries = buildEntries();
+  const entry = entries[idx];
+  if (!entry) return;
+
+  if (action === 'open') {
+    const start = parseInt(target.dataset.start, 10) || 0;
+    openLightbox(entry.trip.photos || [], start, entry.city);
+  } else if (action === 'add') {
+    pendingUpload = { pinKey: entry.pinKey, tripId: entry.trip.id };
+    document.getElementById('photo-file-input').click();
+  }
+});
+
+// ── Lightbox ──
+let lbPhotos = [], lbIndex = 0;
+const lightbox = document.getElementById('lightbox');
+const lbImg = document.getElementById('lb-img');
+const lbCounter = document.getElementById('lb-counter');
+const lbCaption = document.getElementById('lb-caption');
+
+function openLightbox(photos, start, city) {
+  if (!photos.length) return;
+  lbPhotos = photos; lbIndex = start;
+  lbCaption.textContent = city ? `postcard from ${city}` : '';
+  showLbPhoto();
+  lightbox.classList.add('open');
+}
+function showLbPhoto() {
+  lbImg.src = lbPhotos[lbIndex];
+  lbCounter.textContent = `${lbIndex + 1} / ${lbPhotos.length}`;
+  const single = lbPhotos.length <= 1;
+  document.getElementById('lb-prev').style.display = single ? 'none' : '';
+  document.getElementById('lb-next').style.display = single ? 'none' : '';
+}
+function closeLightbox() { lightbox.classList.remove('open'); lbImg.src = ''; }
+function lbStep(dir) {
+  lbIndex = (lbIndex + dir + lbPhotos.length) % lbPhotos.length;
+  showLbPhoto();
+}
+document.getElementById('lb-prev').addEventListener('click', () => lbStep(-1));
+document.getElementById('lb-next').addEventListener('click', () => lbStep(1));
+document.getElementById('lb-close').addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+document.addEventListener('keydown', e => {
+  if (!lightbox.classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  else if (e.key === 'ArrowLeft') lbStep(-1);
+  else if (e.key === 'ArrowRight') lbStep(1);
+});
+
+// ── Add photos (uploads straight from the postcards page) ──
+let pendingUpload = null;
+const MAX_PHOTOS = 10;
+
+document.getElementById('photo-file-input').addEventListener('change', async function () {
+  if (!pendingUpload) { this.value = ''; return; }
+  const pin = data.pins.find(p => p.key === pendingUpload.pinKey);
+  const trip = pin && (pin.trips || []).find(t => t.id === pendingUpload.tripId);
+  if (!trip) { this.value = ''; pendingUpload = null; return; }
+
+  trip.photos = trip.photos || [];
+  const files = Array.from(this.files);
+  const remaining = MAX_PHOTOS - trip.photos.length;
+  const toProcess = files.slice(0, Math.max(0, remaining));
+
+  for (const file of toProcess) {
+    trip.photos.push(await compressImage(file));
+  }
+  if (files.length > remaining) {
+    alert(`only ${remaining} photo(s) added — ${MAX_PHOTOS} max per trip.`);
+  }
+
+  saveData();
+  render();
+  this.value = '';
+  pendingUpload = null;
+});
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Resize + re-encode to JPEG to keep localStorage usage small
+function compressImage(file, maxDim = 1400, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width >= height) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        try { resolve(canvas.toDataURL('image/jpeg', quality)); }
+        catch (err) { resolve(e.target.result); } // fallback to original
+      };
+      img.onerror = () => resolve(e.target.result);
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Init ──
+loadData();
+render();
+</script>
+</body>
+</html>
