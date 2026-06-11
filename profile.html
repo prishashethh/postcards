@@ -125,6 +125,43 @@
     .bucket-item .bi-country { font-size: 0.78rem; color: var(--text-muted); }
     .bucket-item .bi-why { font-size: 0.85rem; color: #4f4a44; line-height: 1.5; margin-top: 8px; }
 
+    /* ── Stamp album ── */
+    .stamp-grid { display: flex; flex-wrap: wrap; gap: 18px; }
+    .stamp {
+      position: relative; width: 108px; padding: 12px 10px 10px;
+      background: var(--bg); border: none;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      font-family: var(--font-body); transition: transform 0.15s ease;
+      /* perforated stamp edge: solid center + dot ring */
+      -webkit-mask:
+        radial-gradient(circle 3.5px, #000 98%, transparent) 0 0 / 11px 11px round,
+        linear-gradient(#000 0 0) center / calc(100% - 11px) calc(100% - 11px) no-repeat;
+      mask:
+        radial-gradient(circle 3.5px, #000 98%, transparent) 0 0 / 11px 11px round,
+        linear-gradient(#000 0 0) center / calc(100% - 11px) calc(100% - 11px) no-repeat;
+    }
+    .stamp:nth-child(odd)  { transform: rotate(-2deg); }
+    .stamp:nth-child(even) { transform: rotate(2deg); }
+    .stamp:hover { transform: rotate(0) scale(1.06); }
+    .stamp .stamp-art {
+      width: 72px; height: 58px; border: 1px solid var(--accent-mid); border-radius: 4px;
+      background: var(--accent-light); overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; line-height: 1;
+    }
+    .stamp .stamp-art img { width: 100%; height: 100%; object-fit: cover; }
+    .stamp .stamp-art .fallback-letter { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; color: var(--accent-dark); }
+    .stamp .stamp-country { font-size: 0.62rem; font-weight: 600; color: var(--text-primary); letter-spacing: 0.05em; text-align: center; line-height: 1.25; max-width: 86px; }
+    .stamp .stamp-year { font-size: 0.6rem; color: var(--accent-dark); letter-spacing: 0.08em; }
+
+    /* ── Year in review ── */
+    .year-list { display: flex; flex-direction: column; }
+    .year-row { display: flex; align-items: baseline; gap: 18px; padding: 13px 4px; border-bottom: 1px solid var(--border); }
+    .year-row:last-child { border-bottom: none; }
+    .year-row .yr-year { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: var(--accent-dark); min-width: 64px; }
+    .year-row .yr-summary { font-size: 0.88rem; color: #4f4a44; line-height: 1.5; }
+    .year-row .yr-summary b { color: var(--text-primary); }
+
     /* ── Empty hints ── */
     .empty-hint { color: var(--text-muted); font-size: 0.88rem; padding: 18px 4px; }
 
@@ -243,6 +280,28 @@
         <button class="btn btn-light" id="edit-bucket-btn">edit</button>
       </div>
       <div id="bucket-container"></div>
+    </section>
+
+    <!-- Stamp album -->
+    <section class="card">
+      <div class="section-head">
+        <div class="titles">
+          <h2>stamp album</h2>
+          <p>a stamp for every country i've visited</p>
+        </div>
+      </div>
+      <div id="stamps-container"></div>
+    </section>
+
+    <!-- Year in review -->
+    <section class="card">
+      <div class="section-head">
+        <div class="titles">
+          <h2>year in review</h2>
+          <p>my travels, one year at a time</p>
+        </div>
+      </div>
+      <div id="year-container"></div>
     </section>
   </div>
 
@@ -381,13 +440,143 @@ function countriesCount() {
 }
 function tripsCount() { return travel.pins.reduce((s, p) => s + (p.trips || []).length, 0); }
 
+function tripYear(trip) {
+  const d = trip.startDate || trip.endDate;
+  return d ? new Date(d + 'T00:00:00').getFullYear() : null;
+}
+// ─── Country flags (name → ISO2, covers Nominatim + GeoJSON name variants) ──
+const COUNTRY_ISO = {
+  'united states':'US','united states of america':'US','usa':'US',
+  'united kingdom':'GB','great britain':'GB','england':'GB','scotland':'GB','wales':'GB','northern ireland':'GB',
+  'france':'FR','germany':'DE','italy':'IT','spain':'ES','portugal':'PT','netherlands':'NL','belgium':'BE',
+  'switzerland':'CH','austria':'AT','ireland':'IE','greece':'GR','sweden':'SE','norway':'NO','denmark':'DK',
+  'finland':'FI','iceland':'IS','poland':'PL','czechia':'CZ','czech republic':'CZ','hungary':'HU','romania':'RO',
+  'bulgaria':'BG','croatia':'HR','serbia':'RS','slovenia':'SI','slovakia':'SK','ukraine':'UA','russia':'RU',
+  'estonia':'EE','latvia':'LV','lithuania':'LT','luxembourg':'LU','malta':'MT','cyprus':'CY','albania':'AL',
+  'north macedonia':'MK','bosnia and herzegovina':'BA','montenegro':'ME','moldova':'MD','belarus':'BY',
+  'turkey':'TR','türkiye':'TR','georgia':'GE','armenia':'AM','azerbaijan':'AZ',
+  'india':'IN','china':'CN','japan':'JP','south korea':'KR','north korea':'KP','taiwan':'TW','hong kong':'HK',
+  'thailand':'TH','vietnam':'VN','viet nam':'VN','cambodia':'KH','laos':'LA','myanmar':'MM','burma':'MM',
+  'malaysia':'MY','singapore':'SG','indonesia':'ID','philippines':'PH','brunei':'BN','east timor':'TL','timor-leste':'TL',
+  'nepal':'NP','bhutan':'BT','bangladesh':'BD','sri lanka':'LK','maldives':'MV','pakistan':'PK','afghanistan':'AF',
+  'kazakhstan':'KZ','uzbekistan':'UZ','kyrgyzstan':'KG','tajikistan':'TJ','turkmenistan':'TM','mongolia':'MN',
+  'israel':'IL','palestine':'PS','jordan':'JO','lebanon':'LB','syria':'SY','iraq':'IQ','iran':'IR',
+  'saudi arabia':'SA','united arab emirates':'AE','uae':'AE','qatar':'QA','kuwait':'KW','bahrain':'BH','oman':'OM','yemen':'YE',
+  'egypt':'EG','morocco':'MA','algeria':'DZ','tunisia':'TN','libya':'LY','sudan':'SD','south sudan':'SS',
+  'ethiopia':'ET','kenya':'KE','tanzania':'TZ','united republic of tanzania':'TZ','uganda':'UG','rwanda':'RW',
+  'burundi':'BI','somalia':'SO','djibouti':'DJ','eritrea':'ER','nigeria':'NG','ghana':'GH',"côte d'ivoire":'CI',
+  "cote d'ivoire":'CI','ivory coast':'CI','senegal':'SN','mali':'ML','burkina faso':'BF','niger':'NE','chad':'TD',
+  'cameroon':'CM','gabon':'GA','republic of the congo':'CG','democratic republic of the congo':'CD','congo':'CG',
+  'angola':'AO','zambia':'ZM','zimbabwe':'ZW','mozambique':'MZ','malawi':'MW','madagascar':'MG','mauritius':'MU',
+  'seychelles':'SC','south africa':'ZA','namibia':'NA','botswana':'BW','lesotho':'LS','eswatini':'SZ','swaziland':'SZ',
+  'benin':'BJ','togo':'TG','sierra leone':'SL','liberia':'LR','guinea':'GN','gambia':'GM','cabo verde':'CV','cape verde':'CV',
+  'canada':'CA','mexico':'MX','guatemala':'GT','belize':'BZ','honduras':'HN','el salvador':'SV','nicaragua':'NI',
+  'costa rica':'CR','panama':'PA','cuba':'CU','jamaica':'JM','haiti':'HT','dominican republic':'DO',
+  'bahamas':'BS','the bahamas':'BS','barbados':'BB','trinidad and tobago':'TT','puerto rico':'PR',
+  'brazil':'BR','argentina':'AR','chile':'CL','peru':'PE','colombia':'CO','venezuela':'VE','ecuador':'EC',
+  'bolivia':'BO','paraguay':'PY','uruguay':'UY','guyana':'GY','suriname':'SR',
+  'australia':'AU','new zealand':'NZ','fiji':'FJ','papua new guinea':'PG','samoa':'WS','tonga':'TO','vanuatu':'VU',
+};
+function flagEmoji(countryName) {
+  const iso = COUNTRY_ISO[(countryName || '').toLowerCase().trim()];
+  if (!iso) return null;
+  return String.fromCodePoint(...[...iso].map(c => 127397 + c.charCodeAt(0)));
+}
+
 function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function initials(name){ return (name||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?'; }
 
 // ─── Render ─────────────────────────────────────────────────────────────
 function renderAll() {
   document.getElementById('bucket-heart').innerHTML = ICONS.heart;
-  renderHeader(); renderTop5(); renderBucket();
+  renderHeader(); renderTop5(); renderBucket(); renderStamps(); renderYearReview();
+}
+
+function visitedCountriesList() {
+  const byCountry = {}; // name → { firstYear }
+  travel.pins.forEach(p => {
+    const name = p.country || p.shadedAs;
+    if (!name) return;
+    if (!byCountry[name]) byCountry[name] = { name, shadedAs: p.shadedAs, firstYear: null };
+    (p.trips || []).forEach(t => {
+      const y = tripYear(t);
+      if (y && (!byCountry[name].firstYear || y < byCountry[name].firstYear)) byCountry[name].firstYear = y;
+    });
+  });
+  return Object.values(byCountry).sort((a, b) =>
+    (a.firstYear || 9999) - (b.firstYear || 9999) || a.name.localeCompare(b.name));
+}
+
+// Developer hook: map a country name to a custom stamp image URL to replace
+// its flag emoji, e.g. { 'France': 'stamps/france.png' }
+const STAMP_ART = {};
+
+function renderStamps() {
+  const c = document.getElementById('stamps-container');
+  const countries = visitedCountriesList();
+  if (!countries.length) {
+    c.innerHTML = `<div class="empty-hint">no stamps yet — every country you pin on the map earns one.</div>`;
+    return;
+  }
+  c.innerHTML = `<div class="stamp-grid">${countries.map(cn => {
+    const custom = STAMP_ART[cn.name] || STAMP_ART[cn.shadedAs];
+    const flag = flagEmoji(cn.name) || flagEmoji(cn.shadedAs);
+    const art = custom
+      ? `<img src="${custom}" alt="${escapeHtml(cn.name)} stamp" />`
+      : (flag || `<span class="fallback-letter">${escapeHtml((cn.name[0] || '?').toUpperCase())}</span>`);
+    return `<div class="stamp">
+      <span class="stamp-art">${art}</span>
+      <span class="stamp-country">${escapeHtml(cn.name)}</span>
+      <span class="stamp-year">${cn.firstYear || '·'}</span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderYearReview() {
+  const c = document.getElementById('year-container');
+
+  // first year each country was visited (for "new countries" per year)
+  const countryFirstYear = {};
+  travel.pins.forEach(p => (p.trips || []).forEach(t => {
+    const y = tripYear(t);
+    const country = p.shadedAs || p.country;
+    if (y && country && (!(country in countryFirstYear) || y < countryFirstYear[country])) countryFirstYear[country] = y;
+  }));
+
+  const years = {}; // year → { trips, photos, cities:Set }
+  let undatedTrips = 0;
+  travel.pins.forEach(p => (p.trips || []).forEach(t => {
+    const y = tripYear(t);
+    if (!y) { undatedTrips++; return; }
+    years[y] = years[y] || { trips: 0, photos: 0, cities: new Set() };
+    years[y].trips++;
+    years[y].photos += (t.photos || []).length;
+    years[y].cities.add(p.name);
+  }));
+
+  const sorted = Object.keys(years).map(Number).sort((a, b) => b - a);
+  if (!sorted.length) {
+    c.innerHTML = `<div class="empty-hint">no dated trips yet — add trip dates on the map to build your year-by-year recap.</div>`;
+    return;
+  }
+
+  const rows = sorted.map(y => {
+    const d = years[y];
+    const newCountries = Object.values(countryFirstYear).filter(fy => fy === y).length;
+    const parts = [
+      `<b>${d.trips}</b> ${d.trips === 1 ? 'trip' : 'trips'}`,
+      `<b>${d.cities.size}</b> ${d.cities.size === 1 ? 'city' : 'cities'}`,
+    ];
+    if (newCountries) parts.push(`<b>${newCountries}</b> new ${newCountries === 1 ? 'country' : 'countries'}`);
+    if (d.photos) parts.push(`<b>${d.photos}</b> ${d.photos === 1 ? 'photo' : 'photos'}`);
+    return `<div class="year-row"><div class="yr-year">${y}</div><div class="yr-summary">${parts.join(' · ')}</div></div>`;
+  });
+
+  if (undatedTrips) {
+    rows.push(`<div class="year-row"><div class="yr-year">—</div><div class="yr-summary"><b>${undatedTrips}</b> undated ${undatedTrips === 1 ? 'trip' : 'trips'}</div></div>`);
+  }
+
+  c.innerHTML = `<div class="year-list">${rows.join('')}</div>`;
 }
 
 function renderHeader() {

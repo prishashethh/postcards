@@ -201,10 +201,10 @@
       <div class="stat"><span class="stat-num" id="stat-trips">0</span><span class="stat-label">Trips</span></div>
     </div>
     <div class="header-actions">
+      <button class="btn btn-primary" id="add-btn">+ add place</button>
       <a class="btn btn-ghost active" href="index.html">map</a>
       <a class="btn btn-ghost" href="postcards.html">postcards</a>
       <a class="btn btn-ghost" href="profile.html">profile</a>
-      <button class="btn btn-primary" id="add-btn">+ add place</button>
     </div>
   </header>
 
@@ -633,11 +633,11 @@ function renderTripBody(tripId) {
       <div class="date-range-row">
         <div class="date-field">
           <label>from</label>
-          <input type="date" id="trip-start" value="${trip.startDate || ''}" />
+          <input type="date" id="trip-start" value="${trip.startDate || ''}" max="${trip.endDate || ''}" />
         </div>
         <div class="date-field">
           <label>to</label>
-          <input type="date" id="trip-end" value="${trip.endDate || ''}" />
+          <input type="date" id="trip-end" value="${trip.endDate || ''}" min="${trip.startDate || ''}" />
         </div>
       </div>
     </div>
@@ -673,9 +673,26 @@ function renderTripBody(tripId) {
   renderPhotosGrid(trip);
   updateUploadBtn(trip);
 
-  // Date change → refresh dropdown label live
-  document.getElementById('trip-start').addEventListener('change', () => refreshDropdownLabel());
-  document.getElementById('trip-end').addEventListener('change', () => refreshDropdownLabel());
+  // Date change → enforce valid range + refresh dropdown label live
+  document.getElementById('trip-start').addEventListener('change', () => { enforceDateRange('start'); refreshDropdownLabel(); });
+  document.getElementById('trip-end').addEventListener('change', () => { enforceDateRange('end'); refreshDropdownLabel(); });
+}
+
+// Keep start ≤ end: grey out invalid dates in the pickers, and revert
+// typed-in values that would create a backwards range.
+function enforceDateRange(changed) {
+  const startEl = document.getElementById('trip-start');
+  const endEl = document.getElementById('trip-end');
+  if (!startEl || !endEl) return;
+
+  if (startEl.value && endEl.value && endEl.value < startEl.value) {
+    if (changed === 'start') startEl.value = endEl.value;
+    else endEl.value = startEl.value;
+    showToast('end date can\'t be before start date');
+  }
+
+  endEl.min = startEl.value || '';
+  startEl.max = endEl.value || '';
 }
 
 function renderPhotosGrid(trip) {
