@@ -180,6 +180,21 @@
     .modal-close { background: none; border: none; font-size: 1.1rem; color: var(--text-muted); cursor: pointer; padding: 4px; line-height: 1; }
     .modal-close:hover { color: var(--text-primary); }
     .modal-body { padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+
+    /* People (followers / following) popup — opaque backdrop */
+    #people-modal { background: rgba(26,24,21,0.92); }
+    #people-modal .modal { width: min(440px, 100%); }
+    #people-modal .modal-body { gap: 4px; min-height: 80px; }
+    .person-row { display: flex; align-items: center; gap: 12px; padding: 10px 6px; border-radius: 10px; text-decoration: none; color: inherit; transition: background 0.12s ease; }
+    .person-row:hover { background: var(--accent-light); }
+    .person-row .av { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: var(--accent-mid); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem; }
+    .person-row .av img { width: 100%; height: 100%; object-fit: cover; }
+    .person-row .p-meta { min-width: 0; }
+    .person-row .p-name { font-weight: 600; font-size: 0.92rem; }
+    .person-row .p-email { font-size: 0.76rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .people-empty { color: var(--text-muted); font-size: 0.88rem; text-align: center; padding: 22px 8px; }
+    .stat.clickable { cursor: pointer; border-radius: 8px; transition: background 0.12s ease; }
+    .stat.clickable:hover { background: var(--accent-light); }
     .modal-footer { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
 
     .field label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
@@ -228,6 +243,208 @@
     ::-webkit-scrollbar { width: 7px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* ══════════════════════ PASSPORT THEME ══════════════════════ */
+    :root {
+      --pp-paper:    #f4ecd6;
+      --pp-paper-2:  #efe6c9;
+      --pp-ink:      #3a2a5d;   /* dark purple ink */
+      --pp-ink-soft: #7a6b9c;
+      --pp-gold:     #b1892c;
+      --pp-gold-soft:#d3bd77;
+      --pp-line:     #c7b489;   /* dotted leaders */
+      --pp-cover:    #5a3fa6;   /* purple cover */
+      --pp-cover-2:  #3c2775;
+      --pp-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.22'/%3E%3C/svg%3E");
+    }
+
+    /* desk backdrop */
+    body { background: radial-gradient(1100px 620px at 50% -8%, #efe9f7, #ddd4ef 72%); }
+
+    /* stage + book */
+    .wrap { max-width: 760px; display: block; padding: 34px 20px 72px; }
+    .pp-book { position: relative; perspective: 2600px; min-height: 500px; transition: height 0.5s ease; }
+    .pp-book::before {
+      content: ""; position: absolute; top: -6px; bottom: -6px; left: -10px; width: 16px;
+      background: linear-gradient(90deg, rgba(58,42,93,0.18), rgba(58,42,93,0));
+      border-radius: 8px 0 0 8px; z-index: 0;
+    }
+    .page {
+      position: absolute; inset: 0; overflow: hidden;
+      border-radius: 6px; box-shadow: var(--shadow-lg);
+      transform-origin: left center;
+      transition: transform 0.75s cubic-bezier(0.42,0.12,0.2,1);
+      -webkit-backface-visibility: hidden; backface-visibility: hidden;
+      will-change: transform;
+    }
+    .page.turned { transform: rotateY(-178deg); }
+    .page-cover { border-radius: 8px; }
+
+    /* cream page cards */
+    .page > .card {
+      height: auto; min-height: 460px;
+      background: var(--pp-grain), linear-gradient(180deg, rgba(255,255,255,0.35), rgba(0,0,0,0.015)), var(--pp-paper);
+      background-size: 140px 140px, auto, auto;
+      border: none; border-radius: 6px;
+      color: var(--pp-ink); padding: 34px 34px 40px;
+    }
+    .page > .card::before {
+      content: ""; position: absolute; inset: 12px; pointer-events: none;
+      border: 1px solid rgba(177,137,44,0.28); border-radius: 3px;
+    }
+    .pp-page-num {
+      position: absolute; bottom: 12px; right: 18px; z-index: 3;
+      font-family: 'Courier New', monospace; font-size: 0.64rem; letter-spacing: 0.16em;
+      color: var(--pp-ink-soft); opacity: 0.8;
+    }
+
+    /* passport-page typography */
+    .page .section-head .titles h2 { color: var(--pp-ink); }
+    .page .section-head .titles h2 svg { color: var(--pp-gold); }
+    .page .section-head .titles p { color: var(--pp-ink-soft); font-style: italic; }
+    .page .empty-hint { color: var(--pp-ink-soft); }
+    .page .btn-light { background: rgba(177,137,44,0.14); color: var(--pp-ink); border: 1px solid var(--pp-gold-soft); }
+    .page .btn-light:hover { background: rgba(177,137,44,0.24); }
+
+    /* ── Cover ── */
+    .page-cover { border-radius: 8px; }
+    .cover-inner {
+      position: relative; min-height: 500px; padding: 66px 34px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center;
+      color: #e9dcae; border-radius: 8px;
+      background:
+        radial-gradient(130% 110% at 50% -10%, rgba(255,255,255,0.10), transparent 45%),
+        repeating-linear-gradient(135deg, rgba(0,0,0,0.05) 0 2px, transparent 2px 5px),
+        linear-gradient(160deg, var(--pp-cover), var(--pp-cover-2));
+      box-shadow: var(--shadow-lg), inset 0 0 0 2px rgba(211,189,119,0.28), inset 0 0 70px rgba(0,0,0,0.4);
+    }
+    .cover-inner::before {
+      content: ""; position: absolute; inset: 20px; border: 2px solid rgba(211,189,119,0.45);
+      border-radius: 5px; pointer-events: none;
+    }
+    .cover-crest svg { width: 74px; height: 74px; color: #d9c079; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.4)); }
+    .cover-brand, .cover-title {
+      font-family: var(--font-display); font-weight: 700; line-height: 1;
+      background: linear-gradient(180deg, #f6e6a6, #cba546 52%, #916a1f);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 1px 0 rgba(0,0,0,0.35));
+    }
+    .cover-brand { font-size: 1.5rem; letter-spacing: 0.06em; }
+    .cover-title { font-size: 2.9rem; letter-spacing: 0.24em; text-transform: uppercase; margin-top: 2px; }
+    .cover-line { width: 92px; height: 2px; background: linear-gradient(90deg, transparent, #d9c079, transparent); margin: 6px 0; }
+    .cover-name { font-family: var(--font-display); font-style: italic; font-size: 1rem; color: #efe4bf; opacity: 0.92; margin-top: 6px; }
+    .cover-foot {
+      position: absolute; bottom: 40px; left: 0; right: 0; text-align: center;
+      font-size: 0.62rem; letter-spacing: 0.36em; text-transform: uppercase; color: rgba(233,220,174,0.7);
+    }
+
+    /* ── Data page (identification) ── */
+    .pp-datapage-inner { display: grid; grid-template-columns: auto 1fr; gap: 30px; align-items: start; }
+    .pp-photo-col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .pp-photo-box {
+      width: 148px; height: 184px; padding: 8px; background: #fffdf3;
+      border: 2px solid var(--pp-ink); box-shadow: inset 0 0 0 1px var(--pp-gold-soft), var(--shadow-sm);
+    }
+    .pp-photo-box .avatar {
+      width: 100%; height: 100%; border-radius: 2px; border: none; box-shadow: none;
+      background: var(--pp-paper-2); color: var(--pp-ink); font-family: var(--font-display); font-size: 2.6rem;
+      filter: grayscale(0.15) contrast(1.02);
+    }
+    .pp-photo-box .avatar img { border-radius: 2px; }
+    .pp-photo-col .socials { justify-content: center; }
+    .page .social-link { border-color: var(--pp-ink-soft); color: var(--pp-ink-soft); background: rgba(255,255,255,0.4); }
+    .page .social-link:hover { border-color: var(--pp-gold); color: var(--pp-gold); }
+
+    .pp-doc-title { font-family: var(--font-display); letter-spacing: 0.34em; text-transform: uppercase; color: var(--pp-gold); font-size: 0.78rem; margin-bottom: 12px; }
+    .pp-doc-head { display: flex; gap: 26px; flex-wrap: wrap; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--pp-gold-soft); }
+    .pp-doc-head .pp-mk { display: block; font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--pp-ink-soft); }
+    .pp-doc-head .pp-mv { font-family: var(--font-display); font-size: 1rem; color: var(--pp-ink); letter-spacing: 0.06em; }
+    .pp-row { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; }
+    .pp-k { font-family: var(--font-body); font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--pp-ink-soft); white-space: nowrap; }
+    .pp-dots { flex: 1; border-bottom: 2px dotted var(--pp-line); transform: translateY(-3px); min-width: 18px; }
+    .pp-v { font-family: var(--font-display); font-size: 1.05rem; color: var(--pp-ink); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62%; }
+    .pp-v.pp-num { font-variant-numeric: tabular-nums; }
+    .pp-bio-row .pp-v { white-space: normal; font-size: 0.9rem; line-height: 1.45; max-width: 66%; }
+    .pp-fields .stats-row { display: flex; flex-direction: column; gap: 0; margin-top: 2px; }
+    .pp-row-click { cursor: pointer; }
+    .pp-row-click:hover .pp-v { color: var(--pp-gold); }
+    .pp-row-click:hover .pp-dots { border-bottom-color: var(--pp-gold-soft); }
+    .pp-fields #follow-btn { margin-top: 16px; align-self: flex-start; }
+    .pp-datapage .edit-icon-btn { background: #fffdf3; border-color: var(--pp-gold-soft); color: var(--pp-ink-soft); }
+    .pp-datapage .edit-icon-btn:hover { border-color: var(--pp-gold); color: var(--pp-gold); background: #fff; }
+
+    /* faux machine-readable zone */
+    .pp-mrz {
+      margin-top: 22px; padding-top: 14px; border-top: 1px dashed var(--pp-ink-soft);
+      font-family: 'Courier New', monospace; font-size: 0.82rem; letter-spacing: 0.18em;
+      color: var(--pp-ink); line-height: 1.75; opacity: 0.82;
+    }
+    .pp-mrz div { word-break: break-all; }
+
+    /* ── Top 5 + bucket on cream ── */
+    .page .bucket-item { background: #fbf6e4; border: 1px solid var(--pp-gold-soft); }
+    .page .bucket-item .bi-city { color: var(--pp-ink); }
+    .page .bucket-item .bi-country { color: var(--pp-ink-soft); }
+    .page .bucket-item .bi-head svg { color: var(--pp-gold); }
+    .page .bucket-item .bi-why { color: #4a3f63; }
+
+    /* ── Visa stamps ── */
+    .visa-grid { display: flex; flex-wrap: wrap; gap: 30px 34px; padding: 22px 6px 8px; }
+    .visa-grid.dense { gap: 6px; padding: 26px 6px; }
+    .visa-grid.dense .visa { margin: -6px -16px; }
+    .visa {
+      position: relative; width: 152px; min-height: 116px; padding: 14px 12px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-align: center;
+      color: var(--visa-c, var(--pp-ink));
+      border: 2.5px solid var(--visa-c, var(--pp-ink)); border-radius: 12px;
+      background: rgba(255,255,255,0.28);
+      transform: rotate(var(--r, 0deg)); transition: transform 0.18s ease;
+      mix-blend-mode: multiply; opacity: 0.9;
+    }
+    .visa.round { border-radius: 50%; width: 140px; height: 140px; min-height: 0; }
+    .visa::before { content: ""; position: absolute; inset: 5px; border: 1px dashed var(--visa-c); border-radius: inherit; opacity: 0.5; }
+    .visa:hover { transform: rotate(0deg) scale(1.07); z-index: 6; }
+    .visa .v-head { font-size: 0.5rem; letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.75; }
+    .visa .v-country { font-family: var(--font-display); font-weight: 700; font-size: 1.02rem; line-height: 1.05; letter-spacing: 0.02em; }
+    .visa .v-city { font-size: 0.64rem; letter-spacing: 0.05em; opacity: 0.92; text-transform: lowercase; }
+    .visa .v-date { font-family: 'Courier New', monospace; font-size: 0.62rem; letter-spacing: 0.14em; margin-top: 3px; opacity: 0.85; }
+    .visa--green { --visa-c: #2f7d5b; }
+    .visa--coral { --visa-c: #cf6650; }
+    .visa--gold  { --visa-c: #b1892c; }
+    .visa--navy  { --visa-c: #33417f; }
+
+    /* ── Year in review: inked year marker ── */
+    .page .year-row { border-bottom: 1px dashed var(--pp-gold-soft); }
+    .page .year-row .yr-year {
+      font-family: var(--font-display); color: var(--pp-ink); min-width: 72px; text-align: center;
+      border: 2px solid var(--pp-gold); border-radius: 8px; padding: 4px 8px; transform: rotate(-3deg);
+      background: rgba(177,137,44,0.08); font-size: 1.05rem; letter-spacing: 0.03em;
+      box-shadow: inset 0 0 0 1px rgba(177,137,44,0.3);
+    }
+    .page .year-row:nth-child(even) .yr-year {
+      transform: rotate(2.5deg); border-color: var(--pp-ink);
+      background: rgba(58,42,93,0.06); box-shadow: inset 0 0 0 1px rgba(58,42,93,0.22);
+    }
+    .page .year-row .yr-summary { color: #4a3f63; }
+    .page .year-row .yr-summary b { color: var(--pp-ink); }
+
+    /* ── Flip navigation ── */
+    .pp-nav { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 24px; position: relative; z-index: 20; }
+    .pp-arrow {
+      width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--pp-gold-soft);
+      background: #fffdf3; color: var(--pp-ink); font-size: 1.5rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; box-shadow: var(--shadow-sm);
+    }
+    .pp-arrow:hover:not(:disabled) { border-color: var(--pp-gold); color: var(--pp-gold); }
+    .pp-arrow:disabled { opacity: 0.4; cursor: default; }
+    .pp-indicator { font-family: var(--font-display); color: var(--pp-ink); letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.8rem; min-width: 210px; text-align: center; }
+
+    @media (max-width: 600px) {
+      .pp-datapage-inner { grid-template-columns: 1fr; justify-items: center; }
+      .pp-fields { width: 100%; }
+      .pp-v { max-width: 55%; }
+      .pp-indicator { min-width: 130px; font-size: 0.7rem; }
+    }
   </style>
 </head>
 <body>
@@ -236,74 +453,117 @@
     <div class="nav-actions">
       <a class="btn btn-ghost" href="index.html">map</a>
       <a class="btn btn-ghost" href="postcards.html">postcards</a>
-      <a class="btn btn-ghost active" href="profile.html">profile</a>
+      <a class="btn btn-ghost active" id="nav-profile" href="profile.html">profile</a>
+      <a class="btn btn-ghost" href="social.html"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;flex-shrink:0"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>mailbox</a>
       <a class="btn btn-ghost" id="logout-btn" href="#">logout</a>
     </div>
   </div>
 
   <div class="wrap">
-    <!-- Profile header -->
-    <section class="card" id="profile-card">
-      <button class="edit-icon-btn" id="edit-profile-btn" title="Edit profile" aria-label="Edit profile"></button>
-      <div class="profile-head">
-        <div class="avatar-col">
-          <div class="avatar" id="avatar"></div>
-          <div class="socials" id="socials"></div>
-        </div>
-        <div class="profile-info">
-          <h1 class="profile-name" id="p-name"></h1>
-          <div class="profile-email" id="p-email"></div>
-          <p class="profile-bio" id="p-bio"></p>
-          <div class="stats-row" id="stats-row"></div>
-        </div>
-      </div>
-    </section>
+    <div class="pp-book" id="pp-book">
 
-    <!-- Top 5 -->
-    <section class="card">
-      <div class="section-head">
-        <div class="titles">
-          <h2>top 5 favorite trips</h2>
-          <p>my most memorable adventures around the world</p>
+      <!-- Page 1 · cover -->
+      <div class="page page-cover">
+        <div class="cover-inner">
+          <div class="cover-crest">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="12" r="9.2"/><path d="M2.8 12h18.4M12 2.8c3 3 3 15.4 0 18.4M12 2.8c-3 3-3 15.4 0 18.4M4.4 7h15.2M4.4 17h15.2"/></svg>
+          </div>
+          <div class="cover-brand">postcards</div>
+          <div class="cover-line"></div>
+          <div class="cover-title">passport</div>
+          <div class="cover-name" id="cover-name"></div>
+          <div class="cover-foot">traveler's edition</div>
         </div>
-        <button class="btn btn-light" id="edit-top5-btn">edit</button>
       </div>
-      <div id="top5-container"></div>
-    </section>
 
-    <!-- Bucket list -->
-    <section class="card">
-      <div class="section-head">
-        <div class="titles">
-          <h2><span id="bucket-heart"></span>travel bucket list</h2>
-          <p>dream destinations waiting to be explored</p>
-        </div>
-        <button class="btn btn-light" id="edit-bucket-btn">edit</button>
+      <!-- Page 2 · identification -->
+      <div class="page">
+        <section class="card pp-datapage" id="profile-card">
+          <button class="edit-icon-btn" id="edit-profile-btn" title="Edit profile" aria-label="Edit profile"></button>
+          <div class="pp-datapage-inner">
+            <div class="pp-photo-col">
+              <div class="pp-photo-box"><div class="avatar" id="avatar"></div></div>
+              <div class="socials" id="socials"></div>
+            </div>
+            <div class="pp-fields">
+              <div class="pp-doc-title">identification</div>
+              <div class="pp-doc-head">
+                <div><span class="pp-mk">type</span><span class="pp-mv">P</span></div>
+                <div><span class="pp-mk">code</span><span class="pp-mv">PST</span></div>
+                <div><span class="pp-mk">passport no.</span><span class="pp-mv" id="pp-no"></span></div>
+              </div>
+              <div class="pp-row"><span class="pp-k">name</span><span class="pp-dots"></span><span class="pp-v" id="p-name"></span></div>
+              <div class="pp-row"><span class="pp-k">email</span><span class="pp-dots"></span><span class="pp-v" id="p-email"></span></div>
+              <div class="pp-row pp-bio-row"><span class="pp-k">bio</span><span class="pp-dots"></span><span class="pp-v" id="p-bio"></span></div>
+              <div class="stats-row" id="stats-row"></div>
+              <button class="btn btn-primary" id="follow-btn" style="display:none;"></button>
+            </div>
+          </div>
+          <div class="pp-mrz" id="pp-mrz"></div>
+        </section>
       </div>
-      <div id="bucket-container"></div>
-    </section>
 
-    <!-- Stamp album -->
-    <section class="card">
-      <div class="section-head">
-        <div class="titles">
-          <h2>stamp album</h2>
-          <p>a stamp for every country i've visited</p>
-        </div>
+      <!-- Page 3 · top 5 -->
+      <div class="page">
+        <section class="card">
+          <div class="section-head">
+            <div class="titles">
+              <h2>top 5 favorite trips</h2>
+              <p>my most memorable adventures around the world</p>
+            </div>
+            <button class="btn btn-light" id="edit-top5-btn">edit</button>
+          </div>
+          <div id="top5-container"></div>
+        </section>
       </div>
-      <div id="stamps-container"></div>
-    </section>
 
-    <!-- Year in review -->
-    <section class="card">
-      <div class="section-head">
-        <div class="titles">
-          <h2>year in review</h2>
-          <p>my travels, one year at a time</p>
-        </div>
+      <!-- Page 4 · bucket list -->
+      <div class="page">
+        <section class="card">
+          <div class="section-head">
+            <div class="titles">
+              <h2><span id="bucket-heart"></span>travel bucket list</h2>
+              <p>dream destinations waiting to be explored</p>
+            </div>
+            <button class="btn btn-light" id="edit-bucket-btn">edit</button>
+          </div>
+          <div id="bucket-container"></div>
+        </section>
       </div>
-      <div id="year-container"></div>
-    </section>
+
+      <!-- Page 5 · visa stamps -->
+      <div class="page">
+        <section class="card">
+          <div class="section-head">
+            <div class="titles">
+              <h2>visa stamps</h2>
+              <p>a stamp for every country i've visited</p>
+            </div>
+          </div>
+          <div id="stamps-container"></div>
+        </section>
+      </div>
+
+      <!-- Page 6 · year in review -->
+      <div class="page">
+        <section class="card">
+          <div class="section-head">
+            <div class="titles">
+              <h2>year in review</h2>
+              <p>my travels, one year at a time</p>
+            </div>
+          </div>
+          <div id="year-container"></div>
+        </section>
+      </div>
+
+    </div>
+
+    <div class="pp-nav">
+      <button class="pp-arrow" id="pp-prev" aria-label="previous page">&lsaquo;</button>
+      <div class="pp-indicator" id="pp-indicator"></div>
+      <button class="pp-arrow" id="pp-next" aria-label="next page">&rsaquo;</button>
+    </div>
   </div>
 
   <!-- Profile edit modal -->
@@ -366,6 +626,14 @@
     </div>
   </div>
 
+  <!-- Followers / following list -->
+  <div class="modal-overlay" id="people-modal">
+    <div class="modal">
+      <div class="modal-header"><h3 id="people-title">followers</h3><button class="modal-close" data-close>✕</button></div>
+      <div class="modal-body" id="people-list"></div>
+    </div>
+  </div>
+
   <input type="file" id="avatar-file-input" accept="image/*" style="display:none" />
 
 <script>
@@ -376,6 +644,7 @@ const ICONS = {
   plane: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5a2.12 2.12 0 0 0-3-3L13 8 4.8 6.2a1 1 0 0 0-.9.3l-.7.7 6 3.3-2.4 2.4-2.3-.3-.9.9 3 1.8 1.8 3 .9-.9-.3-2.3 2.4-2.4 3.3 6 .7-.7a1 1 0 0 0 .3-.9Z"/></svg>',
   heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>',
   edit:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
   instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>',
   twitter: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M18.9 1.2h3.7l-8 9.1L24 22.8h-7.4l-5.8-7.6-6.6 7.6H.5l8.5-9.8L0 1.2h7.6l5.2 6.9 6.1-6.9Zm-1.3 19.4h2L6.5 3.3H4.4Z"/></svg>',
   linkedin: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M4.98 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM3 9h4v12H3V9Zm6 0h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05C20.6 8.65 22 10.6 22 14.05V21h-4v-6.2c0-1.48-.03-3.38-2.06-3.38-2.06 0-2.38 1.6-2.38 3.27V21H9V9Z"/></svg>',
@@ -384,8 +653,25 @@ const ICONS = {
 // ─── Storage keys ───────────────────────────────────────────────────────
 const API_BASE = 'http://localhost:3000';
 
+// If ?user=<id> is present we're viewing someone else's profile (read-only + follow).
+const viewUserId = new URLSearchParams(location.search).get('user');
+let readOnly = false;
+let social = { isSelf: true, isFollowing: false, followersCount: 0, followingCount: 0, userId: null };
+
 let travel = { pins: [], visitedCountries: [] };
 let profile = defaultProfile();
+
+function mapUser(u) {
+  return {
+    name: u.displayName || 'your name',
+    email: u.email || '',
+    bio: u.bio || '',
+    avatar: u.avatar || u.profilePic || '',
+    socials: Object.assign({ instagram: '', twitter: '', linkedin: '' }, u.socials || {}),
+    top5: (u.top5 || []).map(t => ({ pinKey: t.pinId, tripId: t.tripId, photoIndex: t.photoIndex || 0 })),
+    bucket: u.bucket || [],
+  };
+}
 
 function defaultProfile() {
   return {
@@ -409,19 +695,78 @@ async function apiFetch(path, opts = {}) {
 }
 
 async function loadAll() {
-  const [me, pins] = await Promise.all([apiFetch('/api/me'), apiFetch('/api/pins')]);
-  travel.pins = pins.map(p => ({ ...p, key: p._id }));
-  profile = {
-    name: me.displayName || 'your name',
-    email: me.email || '',
-    bio: me.bio || '',
-    // custom avatar wins; otherwise fall back to the Google profile picture
-    avatar: me.avatar || me.profilePic || '',
-    socials: Object.assign({ instagram:'', twitter:'', linkedin:'' }, me.socials || {}),
-    // DB stores top5 with pinId; the page works in pinKey
-    top5: (me.top5 || []).map(t => ({ pinKey: t.pinId, tripId: t.tripId, photoIndex: t.photoIndex || 0 })),
-    bucket: me.bucket || [],
-  };
+  if (viewUserId) {
+    const u = await apiFetch('/api/users/' + viewUserId);
+    if (u.isSelf) { window.location.replace('profile.html'); throw new Error('redirect'); }
+    const pins = await apiFetch('/api/users/' + viewUserId + '/pins');
+    travel.pins = pins.map(p => ({ ...p, key: p._id }));
+    profile = mapUser(u);
+    readOnly = true;
+    social = { isSelf: false, isFollowing: u.isFollowing, followersCount: u.followersCount, followingCount: u.followingCount, userId: u.id };
+  } else {
+    const [me, pins] = await Promise.all([apiFetch('/api/me'), apiFetch('/api/pins')]);
+    travel.pins = pins.map(p => ({ ...p, key: p._id }));
+    profile = mapUser(me);
+    readOnly = false;
+    social = { isSelf: true, isFollowing: false, followersCount: me.followersCount || 0, followingCount: me.followingCount || 0, userId: me.id };
+  }
+}
+
+// Followers / following popup
+async function openPeople(kind) {
+  if (!social.userId) return;
+  const title = document.getElementById('people-title');
+  const list = document.getElementById('people-list');
+  title.textContent = kind;
+  list.innerHTML = `<div class="people-empty">loading…</div>`;
+  openModal('people-modal');
+  try {
+    const people = await apiFetch('/api/users/' + social.userId + '/' + kind);
+    if (!people.length) {
+      list.innerHTML = `<div class="people-empty">${kind === 'followers' ? 'no followers yet.' : 'not following anyone yet.'}</div>`;
+      return;
+    }
+    list.innerHTML = people.map(p => {
+      const av = (p.avatar || p.profilePic)
+        ? `<img src="${escapeHtml(p.avatar || p.profilePic)}" alt="" />`
+        : escapeHtml(initials(p.displayName));
+      return `<a class="person-row" href="profile.html?user=${encodeURIComponent(p.id)}">
+        <span class="av">${av}</span>
+        <span class="p-meta">
+          <div class="p-name">${escapeHtml(p.displayName || 'traveler')}</div>
+          <div class="p-email">${escapeHtml(p.email || '')}</div>
+        </span>
+      </a>`;
+    }).join('');
+  } catch (e) {
+    if (e.message !== 'unauthorized') list.innerHTML = `<div class="people-empty">could not load — try again.</div>`;
+  }
+}
+
+document.getElementById('stats-row').addEventListener('click', e => {
+  const stat = e.target.closest('[data-people]');
+  if (stat) openPeople(stat.dataset.people);
+});
+
+async function toggleFollow() {
+  const btn = document.getElementById('follow-btn');
+  btn.disabled = true;
+  try {
+    if (social.isFollowing) {
+      await apiFetch('/api/follow/' + social.userId, { method: 'DELETE' });
+      social.isFollowing = false;
+      social.followersCount = Math.max(0, social.followersCount - 1);
+    } else {
+      await apiFetch('/api/follow/' + social.userId, { method: 'POST' });
+      social.isFollowing = true;
+      social.followersCount += 1;
+    }
+    renderHeader();
+  } catch (e) {
+    if (e.message !== 'unauthorized') alert('could not update follow — try again.');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function saveProfile() {
@@ -515,6 +860,16 @@ function initials(name){ return (name||'?').trim().split(/\s+/).slice(0,2).map(w
 // ─── Render ─────────────────────────────────────────────────────────────
 function renderAll() {
   document.getElementById('bucket-heart').innerHTML = ICONS.heart;
+  // In read-only mode (viewing someone else) hide all the edit affordances
+  // and stop highlighting the "profile" nav button (it isn't your profile).
+  if (readOnly) {
+    ['edit-top5-btn', 'edit-bucket-btn'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    const navProfile = document.getElementById('nav-profile');
+    if (navProfile) navProfile.classList.remove('active');
+  }
   renderHeader(); renderTop5(); renderBucket(); renderStamps(); renderYearReview();
 }
 
@@ -523,7 +878,7 @@ function visitedCountriesList() {
   travel.pins.forEach(p => {
     const name = p.country || p.shadedAs;
     if (!name) return;
-    if (!byCountry[name]) byCountry[name] = { name, shadedAs: p.shadedAs, firstYear: null };
+    if (!byCountry[name]) byCountry[name] = { name, shadedAs: p.shadedAs, firstYear: null, city: p.name || '' };
     (p.trips || []).forEach(t => {
       const y = tripYear(t);
       if (y && (!byCountry[name].firstYear || y < byCountry[name].firstYear)) byCountry[name].firstYear = y;
@@ -541,19 +896,22 @@ function renderStamps() {
   const c = document.getElementById('stamps-container');
   const countries = visitedCountriesList();
   if (!countries.length) {
-    c.innerHTML = `<div class="empty-hint">no stamps yet — every country you pin on the map earns one.</div>`;
+    c.innerHTML = `<div class="empty-hint">${readOnly ? 'no stamps yet.' : 'no stamps yet — every country you pin on the map earns one.'}</div>`;
     return;
   }
-  c.innerHTML = `<div class="stamp-grid">${countries.map(cn => {
-    const custom = STAMP_ART[cn.name] || STAMP_ART[cn.shadedAs];
-    const flag = flagEmoji(cn.name) || flagEmoji(cn.shadedAs);
-    const art = custom
-      ? `<img src="${custom}" alt="${escapeHtml(cn.name)} stamp" />`
-      : (flag || `<span class="fallback-letter">${escapeHtml((cn.name[0] || '?').toUpperCase())}</span>`);
-    return `<div class="stamp">
-      <span class="stamp-art">${art}</span>
-      <span class="stamp-country">${escapeHtml(cn.name)}</span>
-      <span class="stamp-year">${cn.firstYear || '·'}</span>
+  const palette = ['green', 'coral', 'gold', 'navy'];
+  const dense = countries.length >= 4;
+  c.innerHTML = `<div class="visa-grid ${dense ? 'dense' : ''}">${countries.map((cn, i) => {
+    const color = palette[i % palette.length];
+    const round = (i % 3 === 1);
+    const rot = ((i * 37) % 17) - 8; // deterministic -8..8deg
+    const city = cn.city ? `<div class="v-city">${escapeHtml(cn.city)}</div>` : '';
+    const date = `<div class="v-date">${cn.firstYear || '— — —'}</div>`;
+    return `<div class="visa visa--${color} ${round ? 'round' : ''}" style="--r:${rot}deg" title="${escapeHtml(cn.name)}">
+      <div class="v-head">admitted</div>
+      <div class="v-country">${escapeHtml(cn.name)}</div>
+      ${city}
+      ${date}
     </div>`;
   }).join('')}</div>`;
 }
@@ -606,29 +964,61 @@ function renderYearReview() {
 }
 
 function renderHeader() {
-  document.getElementById('edit-profile-btn').innerHTML = ICONS.edit;
+  const editBtn = document.getElementById('edit-profile-btn');
+  editBtn.innerHTML = ICONS.edit;
+  editBtn.style.display = readOnly ? 'none' : '';
   const av = document.getElementById('avatar');
   av.innerHTML = profile.avatar ? `<img src="${profile.avatar}" alt="${escapeHtml(profile.name)}" />` : escapeHtml(initials(profile.name));
 
   document.getElementById('p-name').textContent = profile.name || 'your name';
-  const emailEl = document.getElementById('p-email');
-  emailEl.innerHTML = profile.email ? `${ICONS.mail}<span>${escapeHtml(profile.email)}</span>` : '';
-  document.getElementById('p-bio').textContent = profile.bio || '';
+  document.getElementById('p-email').textContent = profile.email || '—';
+  document.getElementById('p-bio').textContent = profile.bio || '—';
+
+  // decorative passport number + machine-readable zone (derived, stable per user)
+  const seed = (profile.email || profile.name || 'postcards');
+  let h = 0; for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const passNo = 'PST' + String(1000000 + (h % 9000000));
+  const noEl = document.getElementById('pp-no'); if (noEl) noEl.textContent = passNo;
+
+  const clean = (profile.name || 'traveler').toUpperCase().replace(/[^A-Z ]/g, '').trim().split(/\s+/).filter(Boolean);
+  const surname = (clean.slice(-1)[0] || 'TRAVELER');
+  const given = (clean.slice(0, -1).join('<') || surname);
+  const pad = (s) => (s + '<'.repeat(44)).slice(0, 44);
+  const mrz1 = pad('P<PST' + surname + '<<' + given);
+  const mrz2 = pad(passNo + '<PST' + String(countriesCount()).padStart(2, '0') + 'T' + String(tripsCount()).padStart(2, '0'));
+  const mrzEl = document.getElementById('pp-mrz'); if (mrzEl) mrzEl.innerHTML = `<div>${mrz1}</div><div>${mrz2}</div>`;
+
+  const coverName = document.getElementById('cover-name');
+  if (coverName) coverName.textContent = profile.name ? 'the passport of ' + profile.name : '';
 
   document.getElementById('stats-row').innerHTML = `
-    <div class="stat"><span class="stat-icon">${ICONS.pin}</span><div><div class="stat-num">${countriesCount()}</div><div class="stat-label">countries</div></div></div>
-    <div class="stat"><span class="stat-icon">${ICONS.plane}</span><div><div class="stat-num">${tripsCount()}</div><div class="stat-label">trips</div></div></div>`;
+    <div class="pp-row"><span class="pp-k">countries</span><span class="pp-dots"></span><span class="pp-v pp-num">${countriesCount()}</span></div>
+    <div class="pp-row"><span class="pp-k">trips</span><span class="pp-dots"></span><span class="pp-v pp-num">${tripsCount()}</span></div>
+    <div class="pp-row pp-row-click" data-people="followers"><span class="pp-k">followers</span><span class="pp-dots"></span><span class="pp-v pp-num">${social.followersCount}</span></div>
+    <div class="pp-row pp-row-click" data-people="following"><span class="pp-k">following</span><span class="pp-dots"></span><span class="pp-v pp-num">${social.followingCount}</span></div>`;
 
   const s = profile.socials || {};
   const link = (url, icon) => `<a class="social-link ${url ? '' : 'disabled'}" ${url ? `href="${escapeHtml(url)}" target="_blank" rel="noopener"` : ''}>${icon}</a>`;
   document.getElementById('socials').innerHTML =
     link(s.instagram, ICONS.instagram) + link(s.twitter, ICONS.twitter) + link(s.linkedin, ICONS.linkedin);
+
+  // Follow button (only when viewing someone else)
+  const fb = document.getElementById('follow-btn');
+  if (social.isSelf) {
+    fb.style.display = 'none';
+  } else {
+    fb.style.display = '';
+    fb.textContent = social.isFollowing ? 'following' : 'follow';
+    fb.className = social.isFollowing ? 'btn btn-light' : 'btn btn-primary';
+    fb.style.marginTop = '16px';
+    fb.onclick = toggleFollow;
+  }
 }
 
 function renderTop5() {
   const c = document.getElementById('top5-container');
   const items = (profile.top5 || []).map(sel => ({ sel, trip: findTrip(sel.pinKey, sel.tripId) })).filter(x => x.trip);
-  if (!items.length) { c.innerHTML = `<div class="empty-hint">no favorites yet — click <b>edit</b> to pick up to 5 trips.</div>`; return; }
+  if (!items.length) { c.innerHTML = `<div class="empty-hint">${readOnly ? 'no favorite trips picked yet.' : 'no favorites yet — click <b>edit</b> to pick up to 5 trips.'}</div>`; return; }
   c.innerHTML = `<div class="top5-grid">${items.map(({ sel, trip }) => {
     const idx = Math.min(sel.photoIndex || 0, Math.max(0, trip.photos.length - 1));
     const img = trip.photos.length ? `<img src="${trip.photos[idx]}" alt="${escapeHtml(trip.city)}" />` : `<div class="tc-noimg">no photo</div>`;
@@ -646,7 +1036,7 @@ function renderTop5() {
 function renderBucket() {
   const c = document.getElementById('bucket-container');
   const items = profile.bucket || [];
-  if (!items.length) { c.innerHTML = `<div class="empty-hint">no dream destinations yet — click <b>edit</b> to add up to 3.</div>`; return; }
+  if (!items.length) { c.innerHTML = `<div class="empty-hint">${readOnly ? 'no dream destinations added yet.' : 'no dream destinations yet — click <b>edit</b> to add up to 3.'}</div>`; return; }
   c.innerHTML = `<div class="bucket-grid">${items.map(b => `
     <div class="bucket-item">
       <div class="bi-head">${ICONS.heart}<div><div class="bi-city">${escapeHtml(b.city || 'somewhere')}</div><div class="bi-country">${escapeHtml(b.country || '')}</div></div></div>
@@ -876,11 +1266,64 @@ document.getElementById('logout-btn').addEventListener('click', (e) => {
   window.location.href = API_BASE + '/auth/logout';
 });
 
+// ─── Passport flip-through ────────────────────────────────────────────────
+const PAGE_TITLES = ['cover', 'identification', 'top 5 trips', 'bucket list', 'visa stamps', 'year in review'];
+let ppPages = [], ppIndex = 0, ppBookEl, ppIndicatorEl, ppPrev, ppNext;
+
+function ppMeasure() {
+  const active = ppPages[ppIndex];
+  if (!active || !ppBookEl) return;
+  const child = active.firstElementChild;
+  const h = child ? child.offsetHeight : active.offsetHeight;
+  ppBookEl.style.height = Math.max(h, 320) + 'px';
+}
+function ppShow(i) {
+  ppIndex = Math.max(0, Math.min(ppPages.length - 1, i));
+  ppPages.forEach((pg, idx) => {
+    pg.classList.toggle('turned', idx < ppIndex);
+    pg.style.zIndex = idx < ppIndex ? (100 + idx) : (100 - idx);
+  });
+  if (ppPrev) ppPrev.disabled = ppIndex === 0;
+  if (ppNext) ppNext.disabled = ppIndex === ppPages.length - 1;
+  if (ppIndicatorEl) ppIndicatorEl.textContent =
+    (PAGE_TITLES[ppIndex] || ('page ' + (ppIndex + 1))) + '  ·  ' + (ppIndex + 1) + ' / ' + ppPages.length;
+  ppMeasure();
+}
+function initPassportBook() {
+  ppBookEl = document.getElementById('pp-book');
+  ppIndicatorEl = document.getElementById('pp-indicator');
+  ppPrev = document.getElementById('pp-prev');
+  ppNext = document.getElementById('pp-next');
+  if (!ppBookEl) return;
+  ppPages = Array.from(ppBookEl.querySelectorAll('.page'));
+  ppPages.forEach((pg, idx) => {
+    if (idx === 0) return; // no page number on the cover
+    const n = document.createElement('div');
+    n.className = 'pp-page-num';
+    n.textContent = 'PAGE ' + String(idx).padStart(2, '0');
+    pg.appendChild(n);
+  });
+  ppPrev && ppPrev.addEventListener('click', () => ppShow(ppIndex - 1));
+  ppNext && ppNext.addEventListener('click', () => ppShow(ppIndex + 1));
+  document.addEventListener('keydown', e => {
+    if (document.querySelector('.modal-overlay.open')) return;
+    if (e.key === 'ArrowLeft') ppShow(ppIndex - 1);
+    else if (e.key === 'ArrowRight') ppShow(ppIndex + 1);
+  });
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => ppMeasure());
+    ppPages.forEach(pg => pg.firstElementChild && ro.observe(pg.firstElementChild));
+  }
+  window.addEventListener('resize', ppMeasure);
+  ppShow(0);
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────
 (async function init() {
   try {
     await loadAll();
     renderAll();
+    initPassportBook();
   } catch (e) {
     // apiFetch already redirects to the login page on 401.
     console.warn(e);

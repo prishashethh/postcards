@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema({
   top5: { type: [top5Schema], default: [] },
   bucket: { type: [bucketSchema], default: [] },
 
+  // ─── Social graph ───
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // people I follow
+  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // people who follow me
+
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -144,8 +144,36 @@ function sanitizeUser(u) {
     socials: u.socials,
     top5: u.top5,
     bucket: u.bucket,
+    followersCount: (u.followers || []).length,
+    followingCount: (u.following || []).length,
     createdAt: u.createdAt,
   };
+}
+
+function escapeRegex(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Minimal public info for list views (followers/following, search).
+function publicMini(u) {
+  return {
+    id: u.id,
+    displayName: u.displayName,
+    email: u.email,
+    avatar: u.avatar,
+    profilePic: u.profilePic,
+  };
+}
+
+// Keep each trip's postedAt authoritative on the server: preserve it for trips
+// that already existed (matched by client id), stamp "now" for brand-new trips.
+function stampTrips(incomingTrips, existingTrips = []) {
+  const prev = {};
+  (existingTrips || []).forEach((t) => { if (t.id) prev[t.id] = t.postedAt; });
+  return (incomingTrips || []).map((t) => ({
+    ...t,
+    postedAt: prev[t.id] || t.postedAt || new Date(),
+  }));
 }
 
 // ─── Current user ────────────────────────────────────────────────────────
@@ -190,7 +218,7 @@ app.post(
       shadedAs,
       lat,
       lng,
-      trips: Array.isArray(trips) ? trips : [],
+      trips: stampTrips(Array.isArray(trips) ? trips : []),
     });
     res.status(201).json(pin);
   })
@@ -209,7 +237,7 @@ app.put(
     if (shadedAs !== undefined) pin.shadedAs = shadedAs;
     if (lat !== undefined) pin.lat = lat;
     if (lng !== undefined) pin.lng = lng;
-    if (trips !== undefined) pin.trips = trips;
+    if (trips !== undefined) pin.trips = stampTrips(trips, pin.trips);
 
     await pin.save();
     res.json(pin);
@@ -251,6 +279,147 @@ app.post(
     });
 
     res.json({ url: result.secure_url, publicId: result.public_id });
+  })
+);
+
+// ─── Social: search, public profiles, follow, feed ───────────────────────
+
+// Search other users by (partial) email.
+app.get(
+  '/api/users/search',
+  ensureAuth,
+  asyncH(async (req, res) => {
+    const q = (req.query.q || '').trim();
+    if (!q) return res.json([]);
+    const rx = new RegExp(escapeRegex(q), 'i');
+    const users = await User.find({ email: rx, _id: { $ne: req.user.id } }).limit(20);
+    const followingSet = new Set((req.user.following || []).map((id) => id.toString()));
+    res.json(
+      users.map((u) => ({
+        id: u.id,
+        displayName: u.displayName,
+        email: u.email,
+        avatar: u.avatar,
+        profilePic: u.profilePic,
+        followersCount: (u.followers || []).length,
+        isFollowing: followingSet.has(u.id),
+      }))
+    );
+  })
+);
+
+// Public view of a single user's profile.
+app.get(
+  '/api/users/:id',
+  ensureAuth,
+  asyncH(async (req, res) => {
+    const u = await User.findById(req.params.id);
+    if (!u) return res.status(404).json({ error: 'user not found' });
+    const isSelf = u.id === req.user.id;
+    const isFollowing = (req.user.following || []).some((id) => id.toString() === u.id);
+    res.json({ ...sanitizeUser(u), isSelf, isFollowing });
+  })
+);
+
+// A user's pins (public — used to render their profile: top 5, stamps, year in review).
+app.get(
+  '/api/users/:id/pins',
+  ensureAuth,
+  asyncH(async (req, res) => {
+    const pins = await Pin.find({ userId: req.params.id }).sort({ createdAt: 1 });
+    res.json(pins);
+  })
+);
+
+// Who follows this user.
+app.get(
+  '/api/users/:id/followers',
+  ensureAuth,
+  asyncH(async (req, res) => {
+    const u = await User.findById(req.params.id).populate('followers', 'displayName email avatar profilePic');
+    if (!u) return res.status(404).json({ error: 'user not found' });
+    res.json((u.followers || []).map(publicMini));
+  })
+);
+
+// Who this user follows.
+app.get(
+  '/api/users/:id/following',
+  ensureAuth,
+  asyncH(async (req, res) => {
+    const u = await User.findById(req.params.id).populate('following', 'displayName email avatar profilePic');
+    if (!u) return res.status(404).json({ error: 'user not found' });
+    res.json((u.following || []).map(publicMini));
+  })
+);
+
+// Follow a user.
+app.post(
+  '/api/follow/:id',
+  ensureAuth,
+  asyncH(async (req, res) => {
+    const targetId = req.params.id;
+    if (targetId === req.user.id) return res.status(400).json({ error: "can't follow yourself" });
+    const target = await User.findById(targetId);
+    if (!target) return res.status(404).json({ error: 'user not found' });
+    await User.updateOne({ _id: req.user.id }, { $addToSet: { following: target._id } });
+    await User.updateOne({ _id: target._id }, { $addToSet: { followers: req.user._id } });
+    res.json({ following: true });
+  })
+);
+
+// Unfollow a user.
+app.delete(
+  '/api/follow/:id',
+  ensureAuth,
+  asyncH(async (req, res) => {
+    const targetId = req.params.id;
+    await User.updateOne({ _id: req.user.id }, { $pull: { following: targetId } });
+    await User.updateOne({ _id: targetId }, { $pull: { followers: req.user.id } });
+    res.json({ following: false });
+  })
+);
+
+// The mailbox feed: recent postcards (trips posted in the last 30 days) from
+// everyone the current user follows, newest first.
+app.get(
+  '/api/feed',
+  ensureAuth,
+  asyncH(async (req, res) => {
+    const following = req.user.following || [];
+    if (!following.length) return res.json([]);
+
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const authors = await User.find({ _id: { $in: following } }).select(
+      'displayName avatar profilePic email'
+    );
+    const authorMap = {};
+    authors.forEach((a) => { authorMap[a.id] = a; });
+
+    const pins = await Pin.find({ userId: { $in: following } });
+    const entries = [];
+    pins.forEach((p) => {
+      const a = authorMap[p.userId.toString()];
+      if (!a) return;
+      (p.trips || []).forEach((t) => {
+        if (t.postedAt && new Date(t.postedAt) >= cutoff) {
+          entries.push({
+            author: {
+              id: a.id,
+              name: a.displayName,
+              avatar: a.avatar || a.profilePic || '',
+            },
+            pinId: p.id,
+            city: p.name,
+            country: p.country,
+            trip: t,
+            postedAt: t.postedAt,
+          });
+        }
+      });
+    });
+    entries.sort((x, y) => new Date(y.postedAt) - new Date(x.postedAt));
+    res.json(entries);
   })
 );
 

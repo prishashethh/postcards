@@ -238,10 +238,10 @@
       <div class="stat"><span class="stat-num" id="stat-trips">0</span><span class="stat-label">Trips</span></div>
     </div>
     <div class="header-actions">
-      <button class="btn btn-primary" id="add-btn">+ add place</button>
       <a class="btn btn-ghost active" href="index.html">map</a>
       <a class="btn btn-ghost" href="postcards.html">postcards</a>
       <a class="btn btn-ghost" href="profile.html">profile</a>
+      <a class="btn btn-ghost" href="social.html"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;flex-shrink:0"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>mailbox</a>
       <a class="btn btn-ghost" id="logout-btn" href="#">logout</a>
     </div>
   </header>
@@ -998,12 +998,6 @@ function updateStats() {
 document.getElementById('zoom-in').addEventListener('click', () => map.zoomIn());
 document.getElementById('zoom-out').addEventListener('click', () => map.zoomOut());
 document.getElementById('reset-view').addEventListener('click', () => map.flyTo([20,10], 2, { duration:1 }));
-document.getElementById('add-btn').addEventListener('click', () => {
-  searchInput.focus();
-  const bar = document.getElementById('search-bar');
-  bar.style.boxShadow = '0 0 0 3px rgba(137,98,216,0.28)';
-  setTimeout(() => bar.style.boxShadow = '', 1200);
-});
 document.addEventListener('click', e => {
   if (!document.getElementById('search-bar').contains(e.target)) closeSuggestions();
 });

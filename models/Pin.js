@@ -10,6 +10,7 @@ const tripSchema = new mongoose.Schema(
     restaurants: { type: String, default: '' },
     attractions: { type: String, default: '' },
     notes: { type: String, default: '' },
+    postedAt: { type: Date, default: Date.now }, // when the trip was added (drives the social feed)
   },
   { _id: false }
 );

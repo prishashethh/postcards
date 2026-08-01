@@ -59,37 +59,82 @@
     .wrap { max-width: 1000px; margin: 0 auto; padding: 44px 24px 80px; }
     .deck { display: flex; flex-direction: column; gap: 56px; }
 
-    /* ── Postcard ── */
+    /* ── Postcard (flip card) ── */
     .postcard {
-      position: relative;
-      --tilt: 0deg;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.35), rgba(0,0,0,0.02)),
-        repeating-linear-gradient(0deg, rgba(0,0,0,0.012) 0 1px, transparent 1px 4px),
-        var(--paper);
-      border-radius: 4px;
-      box-shadow: var(--shadow-lg);
-      padding: 14px;
+      position: relative; --tilt: 0deg;
       transform: rotate(var(--tilt));
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      transition: transform 0.25s ease;
+      perspective: 1800px;
     }
     /* like a stack of mail spread on a table */
     .postcard:nth-child(odd)  { --tilt: -0.8deg; }
     .postcard:nth-child(even) { --tilt: 0.7deg; }
-    .postcard:hover { transform: rotate(var(--tilt)) translateY(-3px); box-shadow: 0 22px 44px rgba(40,32,22,0.22); }
-    /* dashed "perforation" frame */
-    .postcard::after {
+    .postcard:hover { transform: rotate(var(--tilt)) translateY(-3px); }
+
+    .pc-flip {
+      position: relative; display: grid;
+      transform-style: preserve-3d;
+      transition: transform 0.65s cubic-bezier(0.2,0.7,0.2,1);
+    }
+    @media (hover: hover) { .postcard:hover .pc-flip { transform: rotateY(180deg); } }
+    @media (hover: none)  { .postcard.flipped .pc-flip { transform: rotateY(180deg); } }
+
+    .pc-face {
+      grid-area: 1 / 1; min-height: 380px; position: relative;
+      -webkit-backface-visibility: hidden; backface-visibility: hidden;
+      border-radius: 4px; box-shadow: var(--shadow-lg); padding: 14px;
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E"),
+        linear-gradient(180deg, rgba(255,255,255,0.35), rgba(0,0,0,0.02)),
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.012) 0 1px, transparent 1px 4px),
+        var(--paper);
+      background-size: 120px 120px, auto, auto, auto;
+    }
+    /* dashed "perforation" frame on each face */
+    .pc-face::after {
       content: ""; position: absolute; inset: 8px;
       border: 2px dashed rgba(43,38,34,0.18);
       border-radius: 3px; pointer-events: none;
     }
+    .pc-back { transform: rotateY(180deg); }
 
-    .pc-inner {
-      position: relative;
-      display: grid; grid-template-columns: 1fr 1px 1fr;
-      gap: 0; min-height: 360px;
-      padding: 8px;
+    /* flip hint on the front */
+    .flip-hint {
+      position: absolute; top: 16px; right: 18px; z-index: 4;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.62rem; letter-spacing: 0.12em; text-transform: lowercase;
+      color: var(--accent-dark); opacity: 0.6;
     }
+    .flip-hint::after { content: "hover to flip"; }
+    @media (hover: none) { .flip-hint::after { content: "tap to flip"; } }
+
+    /* Front face layout */
+    .pc-front-inner { display: flex; flex-direction: column; height: 100%; padding: 18px 24px; }
+    .pc-front .pc-photos { justify-content: center; margin-bottom: 0; }
+    .pc-front-loc { margin-top: auto; padding-top: 24px; }
+    .pc-front .pc-title { margin-top: 0; }
+
+    /* Back face layout */
+    .pc-back-inner { display: grid; grid-template-columns: 1fr 1px 0.9fr; height: 100%; padding: 6px; }
+    .pc-back-left { padding: 24px 22px 18px 16px; display: flex; flex-direction: column; gap: 16px; }
+    .pc-back-right { padding: 76px 16px 18px 22px; display: flex; flex-direction: column; }
+
+    /* dotted address block */
+    .pc-address { margin-top: auto; }
+    .addr-line { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+    .addr-label { font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-dark); font-weight: 700; white-space: nowrap; }
+    .addr-value { flex: 1; min-width: 0; font-family: var(--font-hand); font-size: 1.2rem; line-height: 1.1; color: var(--ink); border-bottom: 2px dotted var(--rule); padding-bottom: 3px; }
+    .addr-value a { color: var(--accent-dark); text-decoration: none; }
+    .addr-value a:hover { text-decoration: underline; }
+    .pc-actions { margin-top: 18px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .pc-actions button {
+      font-family: var(--font-body); font-size: 0.72rem; font-weight: 500;
+      padding: 7px 12px; border-radius: 7px; cursor: pointer; border: 1px solid var(--accent-mid);
+      background: rgba(137,98,216,0.10); color: var(--accent-dark); transition: all 0.15s ease;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .pc-actions button:hover { background: rgba(137,98,216,0.2); border-color: var(--accent); }
+
     /* center divider (double rule like a real postcard) */
     .pc-divider {
       width: 1px; align-self: stretch; margin: 6px 0;
@@ -101,9 +146,12 @@
       background: var(--ink-soft); opacity: 0.6;
     }
 
-    /* Left side */
-    .pc-left { padding: 14px 26px 14px 14px; display: flex; flex-direction: column; }
     .pc-photos { display: flex; gap: 14px; margin-bottom: 26px; min-height: 140px; }
+    .pc-nophoto {
+      width: 100%; max-width: 300px; min-height: 134px; display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; color: var(--ink-soft); font-size: 0.8rem; font-style: italic; margin: 0 auto;
+      background: repeating-linear-gradient(45deg, rgba(137,98,216,0.10) 0 10px, rgba(137,98,216,0.045) 10px 20px);
+    }
     .photo-print {
       width: 168px; height: 134px; background: #fff;
       padding: 7px 7px 22px; border-radius: 2px;
@@ -172,16 +220,26 @@
 
     /* decorative postmark stamp top-right of message side */
     .pc-stamp {
-      position: absolute; top: 12px; right: 12px; width: 50px; height: 62px;
-      border: 2px solid var(--accent); border-radius: 3px;
+      position: absolute; top: 12px; right: 12px; width: 54px; height: 66px;
       display: flex; align-items: center; justify-content: center;
-      background: repeating-linear-gradient(135deg, rgba(137,98,216,0.12) 0 6px, transparent 6px 12px);
-      transform: rotate(4deg); opacity: 0.85;
+      background:
+        repeating-linear-gradient(135deg, rgba(137,98,216,0.14) 0 6px, transparent 6px 12px),
+        #fbf7ff;
+      transform: rotate(4deg);
+      /* serrated / perforated stamp edge (scalloped dot ring + solid center) */
+      --perf: 8px;
+      -webkit-mask:
+        radial-gradient(circle 3px, #000 97%, transparent) 0 0 / var(--perf) var(--perf) round,
+        linear-gradient(#000 0 0) center / calc(100% - var(--perf)) calc(100% - var(--perf)) no-repeat;
+      mask:
+        radial-gradient(circle 3px, #000 97%, transparent) 0 0 / var(--perf) var(--perf) round,
+        linear-gradient(#000 0 0) center / calc(100% - var(--perf)) calc(100% - var(--perf)) no-repeat;
+      filter: drop-shadow(0 2px 3px rgba(60,44,96,0.28));
     }
     .pc-stamp .letter { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; color: var(--accent-dark); }
     .pc-stamp::before {
-      content: ""; position: absolute; inset: 3px;
-      border: 1px dotted var(--accent); border-radius: 2px;
+      content: ""; position: absolute; inset: 7px;
+      border: 1px dashed var(--accent-dark); border-radius: 1px; opacity: 0.5;
     }
 
     /* ── Empty state ── */
@@ -236,10 +294,12 @@
     .lb-caption { position: absolute; top: 28px; left: 28px; color: #f3efe6; font-family: var(--font-display); font-size: 1rem; }
 
     @media (max-width: 640px) {
-      .pc-inner { grid-template-columns: 1fr; min-height: 0; }
+      .pc-back-inner { grid-template-columns: 1fr; }
       .pc-divider { display: none; }
-      .pc-left { padding: 14px; }
-      .pc-right { padding: 22px 14px 14px; border-top: 1px dashed var(--rule); margin-top: 8px; }
+      .pc-back-left { padding: 16px; }
+      .pc-back-right { padding: 20px 16px 16px; border-top: 1px dashed var(--rule); }
+      .pc-front-inner { padding: 16px; }
+      .pc-face { min-height: 0; }
       .lb-prev { left: 8px; } .lb-next { right: 8px; }
     }
 
@@ -255,6 +315,7 @@
       <a class="btn" href="index.html">map</a>
       <a class="btn active" href="postcards.html">postcards</a>
       <a class="btn" href="profile.html">profile</a>
+      <a class="btn" href="social.html"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>mailbox</a>
       <a class="btn" id="logout-btn" href="#">logout</a>
     </div>
   </div>
@@ -368,31 +429,52 @@ function renderCard(entry, idx) {
   const photos = trip.photos || [];
   const photoArea = photos.length
     ? renderPhotos(photos, idx, city)
-    : `<button class="add-photos-btn" data-action="add" data-idx="${idx}">
-         <span class="plus">＋</span> add photos
-       </button>`;
+    : `<div class="pc-nophoto">no photos yet</div>`;
 
   const dates = tripLabel(trip);
   const datesHtml = (trip.startDate || trip.endDate) ? `<div class="pc-dates">${escapeHtml(dates)}</div>` : '';
   const stampLetter = (country || city || '?').trim().charAt(0).toUpperCase();
 
+  const canAdd = photos.length < MAX_PHOTOS;
+  const actions = [
+    photos.length ? `<button data-action="open" data-idx="${idx}" data-start="0">view all photos</button>` : '',
+    canAdd ? `<button data-action="add" data-idx="${idx}">＋ add photos</button>` : '',
+  ].join('');
+
   return `
   <article class="postcard">
-    <div class="pc-inner">
-      <div class="pc-left">
-        <div class="pc-photos">${photoArea}</div>
-        <h2 class="pc-title"><span class="from">postcard from</span>${escapeHtml(city)}</h2>
-        <div class="pc-country">${escapeHtml(country || '')}</div>
-        ${datesHtml}
+    <div class="pc-flip">
+      <!-- FRONT: photo collage + location -->
+      <div class="pc-face pc-front">
+        <div class="pc-front-inner">
+          <div class="pc-photos">${photoArea}</div>
+          <div class="pc-front-loc">
+            <h2 class="pc-title"><span class="from">postcard from</span>${escapeHtml(city)}</h2>
+            <div class="pc-country">${escapeHtml(country || '')}</div>
+            ${datesHtml}
+          </div>
+        </div>
+        <div class="flip-hint">↻</div>
       </div>
 
-      <div class="pc-divider"></div>
-
-      <div class="pc-right">
+      <!-- BACK: stamp, message, address block -->
+      <div class="pc-face pc-back">
         <div class="pc-stamp"><span class="letter">${escapeHtml(stampLetter)}</span></div>
-        ${section('Notes', trip.notes)}
-        ${section('Restaurants', trip.restaurants)}
-        ${section('Tourist attractions', trip.attractions)}
+        <div class="pc-back-inner">
+          <div class="pc-back-left">
+            ${section('notes', trip.notes)}
+            ${section('restaurants', trip.restaurants)}
+            ${section('tourist attractions', trip.attractions)}
+          </div>
+          <div class="pc-divider"></div>
+          <div class="pc-back-right">
+            <div class="pc-address">
+              <div class="addr-line"><span class="addr-label">sent from</span><span class="addr-value">${escapeHtml(city)}</span></div>
+              <div class="addr-line"><span class="addr-label">sent by</span><span class="addr-value">you</span></div>
+            </div>
+            <div class="pc-actions">${actions}</div>
+          </div>
+        </div>
       </div>
     </div>
   </article>`;
@@ -403,7 +485,7 @@ function renderPhotos(photos, idx, city) {
   return shown.map((src, j) => {
     const more = (j === shown.length - 1 && photos.length > 2)
       ? `<span class="photo-more">+${photos.length - 2}</span>` : '';
-    return `<div class="photo-print" data-action="open" data-idx="${idx}" data-start="${j}">
+    return `<div class="photo-print">
               <img src="${src}" alt="Photo from ${escapeHtml(city)}" />${more}
             </div>`;
   }).join('');
@@ -425,19 +507,27 @@ function escapeHtml(s) {
 // ── Click handling (delegated) ──
 document.getElementById('deck').addEventListener('click', e => {
   const target = e.target.closest('[data-action]');
-  if (!target) return;
-  const action = target.dataset.action;
-  const idx = parseInt(target.dataset.idx, 10);
-  const entries = buildEntries();
-  const entry = entries[idx];
-  if (!entry) return;
-
-  if (action === 'open') {
-    const start = parseInt(target.dataset.start, 10) || 0;
-    openLightbox(entry.trip.photos || [], start, entry.city);
-  } else if (action === 'add') {
-    pendingUpload = { pinKey: entry.pinKey, tripId: entry.trip.id };
-    document.getElementById('photo-file-input').click();
+  if (target) {
+    e.stopPropagation();
+    const action = target.dataset.action;
+    const idx = parseInt(target.dataset.idx, 10);
+    const entries = buildEntries();
+    const entry = entries[idx];
+    if (!entry) return;
+    if (action === 'open') {
+      const start = parseInt(target.dataset.start, 10) || 0;
+      openLightbox(entry.trip.photos || [], start, entry.city);
+    } else if (action === 'add') {
+      pendingUpload = { pinKey: entry.pinKey, tripId: entry.trip.id };
+      document.getElementById('photo-file-input').click();
+    }
+    return;
+  }
+  if (e.target.closest('a')) return;
+  // Touch devices have no hover — tap the card to flip it.
+  if (window.matchMedia('(hover: none)').matches) {
+    const card = e.target.closest('.postcard');
+    if (card) card.classList.toggle('flipped');
   }
 });
 
