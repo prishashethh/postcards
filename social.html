@@ -53,11 +53,13 @@
     .btn-light:hover { color: var(--accent-dark); border-color: var(--accent); }
 
     /* ── Layout ── */
-    .wrap { max-width: 1000px; margin: 0 auto; padding: 44px 24px 80px; }
+    .wrap { max-width: 1160px; margin: 0 auto; padding: 44px 32px 80px; }
     .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 36px; flex-wrap: wrap; }
     .page-head .titles h1 { font-family: var(--font-display); font-size: 2rem; display: flex; align-items: center; gap: 12px; }
     .page-head .titles p { color: var(--ink-soft); font-size: 0.9rem; margin-top: 6px; }
-    .deck { display: flex; flex-direction: column; gap: 56px; }
+    /* two postcards per row, like cards laid out on a table */
+    .deck { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 44px 40px; }
+    @media (max-width: 820px) { .deck { grid-template-columns: 1fr; gap: 36px; } }
 
     /* ── Author strip ── */
     .pc-author { display: flex; align-items: center; padding: 2px 6px 16px; }
@@ -81,37 +83,73 @@
     .pc-flip { position: relative; display: grid; transform-style: preserve-3d; transition: transform 0.65s cubic-bezier(0.2,0.7,0.2,1); }
     @media (hover: hover) { .postcard:hover .pc-flip { transform: rotateY(180deg); } }
     @media (hover: none)  { .postcard.flipped .pc-flip { transform: rotateY(180deg); } }
+    /* the turned-away front still sits on top of the back, so let clicks pass
+       through it to the back's buttons while the card is flipped */
+    @media (hover: hover) { .postcard:hover .pc-front { pointer-events: none; } }
+    @media (hover: none)  { .postcard.flipped .pc-front { pointer-events: none; } }
 
     .pc-face {
-      grid-area: 1 / 1; min-height: 380px; position: relative;
+      grid-area: 1 / 1; position: relative;
+      /* real postcard proportions (6×4 in) */
+      aspect-ratio: 3 / 2; overflow: hidden;
       -webkit-backface-visibility: hidden; backface-visibility: hidden;
-      border-radius: 4px; box-shadow: var(--shadow-lg); padding: 14px;
+      padding: 14px;
+      /* the shadow follows the deckle-cut outline of the paper below */
+      filter: drop-shadow(0 10px 14px rgba(60,44,96,0.22)) drop-shadow(0 2px 3px rgba(60,44,96,0.10));
+    }
+    /* the card stock, with a deckle-cut edge (tiny wavy cuts) like vintage photo postcards.
+       It's a layer behind the content so the cut never clips the photo or the writing. */
+    .pc-face::before {
+      content: ""; position: absolute; inset: 0; z-index: -1;
       background:
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E"),
         linear-gradient(180deg, rgba(255,255,255,0.35), rgba(0,0,0,0.02)),
         repeating-linear-gradient(0deg, rgba(0,0,0,0.012) 0 1px, transparent 1px 4px),
         var(--paper);
       background-size: 120px 120px, auto, auto, auto;
+      -webkit-mask:
+        radial-gradient(circle 2.6px, #000 96%, transparent) 0 0 / 6px 6px round,
+        linear-gradient(#000 0 0) center / calc(100% - 5px) calc(100% - 5px) no-repeat;
+              mask:
+        radial-gradient(circle 2.6px, #000 96%, transparent) 0 0 / 6px 6px round,
+        linear-gradient(#000 0 0) center / calc(100% - 5px) calc(100% - 5px) no-repeat;
     }
-    .pc-face::after { content: ""; position: absolute; inset: 8px; border: 2px dashed rgba(43,38,34,0.18); border-radius: 3px; pointer-events: none; }
+    /* photo side: a clean white border, like a printed photo postcard */
+    .pc-front::before { background: linear-gradient(180deg, #ffffff, #f8f4ff); }
     .pc-back { transform: rotateY(180deg); }
 
-    .flip-hint {
-      position: absolute; top: 16px; right: 18px; z-index: 4;
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 0.62rem; letter-spacing: 0.12em; text-transform: lowercase; color: var(--accent-dark); opacity: 0.6;
+    /* Front face: the first photo fills the card inside a thin paper border,
+       with the location printed over the bottom-left like a souvenir card */
+    .pc-front-inner { position: relative; height: 100%; overflow: hidden; }
+    .pc-cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* film grain + an overall dim + a deeper shade at the bottom so the text always reads */
+    .pc-front.has-photo .pc-front-inner::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.2 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E") 0 0 / 160px 160px,
+        linear-gradient(to top, rgba(28,20,44,0.62) 0%, rgba(28,20,44,0.2) 45%, rgba(28,20,44,0.06) 100%);
+      mix-blend-mode: multiply;
     }
-    .flip-hint::after { content: "hover to flip"; }
-    @media (hover: none) { .flip-hint::after { content: "tap to flip"; } }
+    .pc-front-loc { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 0 22px 18px; }
+    .pc-front.has-photo .pc-title,
+    .pc-front.has-photo .pc-title .from,
+    .pc-front.has-photo .pc-country,
+    .pc-front.has-photo .pc-dates { color: #fff; text-shadow: 0 1px 8px rgba(20,12,36,0.45); }
+    .pc-photo-count {
+      position: absolute; top: 14px; left: 16px; z-index: 2;
+      background: rgba(255,255,255,0.88); color: var(--accent-dark);
+      font-size: 0.66rem; font-weight: 600; padding: 3px 9px; border-radius: 20px;
+    }
+    /* no photo yet: plain paper front with a soft striped "print area" */
+    .pc-front:not(.has-photo) .pc-front-inner {
+      background: repeating-linear-gradient(45deg, rgba(137,98,216,0.07) 0 12px, transparent 12px 24px);
+    }
+    .pc-front:not(.has-photo) .pc-front-loc { top: 0; display: flex; flex-direction: column; justify-content: center; padding: 22px 28px; }
 
-    .pc-front-inner { display: flex; flex-direction: column; height: 100%; padding: 18px 24px; }
-    .pc-front .pc-photos { justify-content: center; margin-bottom: 0; }
-    .pc-front-loc { margin-top: auto; padding-top: 24px; }
-    .pc-front .pc-title { margin-top: 0; }
-
-    .pc-back-inner { display: grid; grid-template-columns: 1fr 1px 0.9fr; height: 100%; padding: 6px; }
-    .pc-back-left { padding: 24px 22px 18px 16px; display: flex; flex-direction: column; gap: 16px; }
-    .pc-back-right { padding: 76px 16px 18px 22px; display: flex; flex-direction: column; }
+    /* Back face layout */
+    .pc-back-inner { display: grid; grid-template-columns: 1fr 1px 0.85fr; height: 100%; }
+    .pc-back-left { padding: 16px 18px 14px 14px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; min-height: 0; }
+    .pc-back-right { padding: 84px 12px 12px 18px; display: flex; flex-direction: column; min-height: 0; }
 
     .pc-address { margin-top: auto; }
     .addr-line { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
@@ -131,28 +169,6 @@
     .pc-divider { width: 1px; align-self: stretch; margin: 6px 0; background: var(--ink-soft); position: relative; opacity: 0.55; }
     .pc-divider::before { content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 1px; background: var(--ink-soft); opacity: 0.6; }
 
-    .pc-photos { display: flex; gap: 14px; margin-bottom: 26px; min-height: 140px; }
-    .photo-print { width: 168px; height: 134px; background: #fff; padding: 7px 7px 22px; border-radius: 2px; box-shadow: 0 4px 12px rgba(40,32,22,0.22); cursor: pointer; transition: transform 0.18s ease, box-shadow 0.18s ease; position: relative; }
-    .photo-print:first-child { transform: rotate(-3deg); }
-    .photo-print:nth-child(2) { transform: rotate(2.5deg); margin-top: 10px; }
-    .photo-print:hover { transform: rotate(0) scale(1.04); box-shadow: 0 8px 20px rgba(40,32,22,0.30); z-index: 3; }
-    .photo-print img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .photo-print::before {
-      content: ""; position: absolute; z-index: 2; top: -9px; left: 50%; width: 72px; height: 20px;
-      transform: translateX(-50%) rotate(-5deg);
-      background: repeating-linear-gradient(90deg, rgba(255,255,255,0.28) 0 3px, transparent 3px 7px), rgba(202,176,255,0.55);
-      clip-path: polygon(0 12%, 4% 0, 100% 8%, 96% 100%, 2% 94%);
-      box-shadow: 0 1px 3px rgba(60,44,96,0.18); pointer-events: none;
-    }
-    .photo-print:nth-child(2)::before { transform: translateX(-50%) rotate(4deg); }
-    .photo-more { position: absolute; bottom: 6px; right: 6px; background: rgba(43,38,34,0.82); color: #fff; font-size: 0.62rem; font-weight: 500; padding: 2px 7px; border-radius: 20px; }
-
-    .pc-nophoto {
-      width: 100%; max-width: 300px; min-height: 134px; display: flex; align-items: center; justify-content: center;
-      border-radius: 8px; color: var(--ink-soft); font-size: 0.8rem; font-style: italic;
-      background: repeating-linear-gradient(45deg, rgba(137,98,216,0.10) 0 10px, rgba(137,98,216,0.045) 10px 20px);
-    }
-
     .pc-title { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.6rem, 3.4vw, 2.35rem); line-height: 1.02; letter-spacing: 0.01em; color: var(--ink); margin-top: auto; }
     .pc-title .from { display: block; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.32em; color: var(--accent-dark); margin-bottom: 8px; }
     .pc-country { margin-top: 12px; font-size: 0.72rem; letter-spacing: 0.18em; color: var(--ink-soft); }
@@ -161,7 +177,7 @@
     .pc-right { padding: 82px 14px 14px 26px; position: relative; display: flex; flex-direction: column; gap: 16px; }
     .pc-section .lbl { font-size: 0.6rem; letter-spacing: 0.16em; color: var(--accent-dark); font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
     .pc-section .lbl::after { content: ""; flex: 1; height: 1px; background: var(--rule); opacity: 0.7; }
-    .pc-section .val { font-family: var(--font-hand); font-size: 1.18rem; line-height: 1.35; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+    .pc-section .val { font-family: var(--font-hand); font-size: 1.08rem; line-height: 1.3; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
     .pc-section .val.empty { color: var(--ink-soft); opacity: 0.55; font-style: italic; }
 
     .pc-stamp {
@@ -226,12 +242,12 @@
     .lb-caption { position: absolute; top: 28px; left: 28px; color: #f3efe6; font-family: var(--font-display); font-size: 1rem; }
 
     @media (max-width: 640px) {
-      .pc-back-inner { grid-template-columns: 1fr; }
+      /* too narrow for two columns: stack the back and let it scroll inside the card */
+      .pc-back-inner { grid-template-columns: 1fr; height: 100%; overflow-y: auto; }
       .pc-divider { display: none; }
-      .pc-back-left { padding: 16px; }
-      .pc-back-right { padding: 20px 16px 16px; border-top: 1px dashed var(--rule); }
-      .pc-front-inner { padding: 16px; }
-      .pc-face { min-height: 0; }
+      .pc-back-left { padding: 14px; overflow: visible; }
+      .pc-back-right { padding: 18px 14px 14px; border-top: 1px dashed var(--rule); }
+      .pc-front-loc { padding: 0 16px 14px; }
       .lb-prev { left: 8px; } .lb-next { right: 8px; }
     }
 
@@ -293,7 +309,12 @@
   </div>
 
 <script>
-const API_BASE = 'http://localhost:3000';
+// Local dev talks to your own machine; the live site talks to the deployed server.
+// ↓ Replace with your Render URL after deploying the backend.
+const PROD_API = 'https://YOUR-APP.onrender.com';
+const API_BASE = ['localhost', '127.0.0.1'].includes(location.hostname)
+  ? 'http://localhost:3000'
+  : PROD_API;
 
 async function apiFetch(path, opts = {}) {
   const res = await fetch(API_BASE + path, {
@@ -357,9 +378,11 @@ function renderFeed() {
 function renderCard(entry, idx) {
   const { author, city, country, trip } = entry;
   const photos = trip.photos || [];
-  const photoArea = photos.length
-    ? renderPhotos(photos, idx, city)
-    : `<div class="pc-nophoto">no photos on this postcard</div>`;
+  const cover = photos.length
+    ? `<img class="pc-cover" src="${escapeHtml(photos[0])}" alt="Photo from ${escapeHtml(city)}" />`
+    : '';
+  const photoCount = photos.length > 1
+    ? `<span class="pc-photo-count">${photos.length} photos</span>` : '';
 
   const datesHtml = (trip.startDate || trip.endDate) ? `<div class="pc-dates">${escapeHtml(tripLabel(trip))}</div>` : '';
   const stampLetter = (country || city || '?').trim().charAt(0).toUpperCase();
@@ -382,17 +405,16 @@ function renderCard(entry, idx) {
       </a>
     </div>
     <div class="pc-flip">
-      <!-- FRONT: photo collage + location -->
-      <div class="pc-face pc-front">
+      <!-- FRONT: full-bleed cover photo + location -->
+      <div class="pc-face pc-front ${photos.length ? 'has-photo' : ''}">
         <div class="pc-front-inner">
-          <div class="pc-photos">${photoArea}</div>
+          ${cover}${photoCount}
           <div class="pc-front-loc">
             <h2 class="pc-title"><span class="from">postcard from</span>${escapeHtml(city)}</h2>
             <div class="pc-country">${escapeHtml(country || '')}</div>
             ${datesHtml}
           </div>
         </div>
-        <div class="flip-hint">↻</div>
       </div>
 
       <!-- BACK: stamp, message, address block -->
@@ -416,17 +438,6 @@ function renderCard(entry, idx) {
       </div>
     </div>
   </article>`;
-}
-
-function renderPhotos(photos, idx, city) {
-  const shown = photos.slice(0, 2);
-  return shown.map((src, j) => {
-    const more = (j === shown.length - 1 && photos.length > 2)
-      ? `<span class="photo-more">+${photos.length - 2}</span>` : '';
-    return `<div class="photo-print">
-              <img src="${escapeHtml(src)}" alt="Photo from ${escapeHtml(city)}" />${more}
-            </div>`;
-  }).join('');
 }
 
 function section(label, value) {

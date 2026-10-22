@@ -56,7 +56,7 @@
 
     /* ── Map ── */
     .map-wrapper { position: relative; overflow: hidden; }
-    #map { width: 100%; height: 100%; background: #e8f0f7; }
+    #map { width: 100%; height: 100%; background: #ebe4f7; }
     .leaflet-control-attribution { font-size: 10px !important; background: rgba(255,255,255,0.7) !important; }
 
     /* ── Search ── */
@@ -219,7 +219,7 @@
 <div id="login-screen" class="login-screen" style="display:none;">
   <div class="login-card">
     <div class="login-logo">postc<span>a</span>rds</div>
-    <p class="login-tagline">your trips, mapped &amp; remembered.</p>
+    <p class="login-tagline">sender: login!</p>
     <a class="login-google" href="#" id="login-google-btn">
       <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       continue with google
@@ -317,21 +317,41 @@ const state = {
 // ─── Map init ─────────────────────────────────────────────────────────────
 const map = L.map('map', { center:[20,10], zoom:2, zoomControl:false, minZoom:1.5, maxZoom:14, worldCopyJump:true });
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-  attribution:'&copy; <a href="https://carto.com/">CARTO</a> &copy; OSM contributors',
-  subdomains:'abcd', maxZoom:19,
+// No base tiles: the ocean is #map's background and land is drawn from the
+// country GeoJSON below. Only place-name labels come from a tile layer.
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+  attribution:'Labels &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Natural Earth',
+  maxZoom:16, pane:'shadowPane',
 }).addTo(map);
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-  subdomains:'abcd', maxZoom:19, pane:'shadowPane',
-}).addTo(map);
+// Default style for land that hasn't been visited
+const LAND_STYLE = { fillColor:'#ffffff', fillOpacity:1, color:'#d9cff0', weight:0.6, opacity:1 };
+
+// ─── State / province lines ───────────────────────────────────────────────
+// Natural Earth 50m: only covers large countries (US, Canada, Brazil, India…),
+// but is ~0.9 MB vs ~21 MB for the full 10m set. Drawn in its own pane above
+// the country fills and below the labels, and ignores the mouse so country
+// hover/click still work.
+map.createPane('stateLines');
+map.getPane('stateLines').style.zIndex = 450;
+map.getPane('stateLines').style.pointerEvents = 'none';
+
+fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_1_states_provinces_lines.geojson')
+  .then(r => r.json())
+  .then(data => {
+    L.geoJSON(data, {
+      pane: 'stateLines', interactive: false,
+      style: () => ({ color:'#e2d9f3', weight:0.5, opacity:1 }),
+    }).addTo(map);
+  })
+  .catch(() => {}); // purely decorative — the map works without it
 
 // ─── GeoJSON ──────────────────────────────────────────────────────────────
 fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
   .then(r => r.json())
   .then(data => {
     L.geoJSON(data, {
-      style: () => ({ fillColor:'transparent', fillOpacity:0, color:'#d9cff0', weight:0.5, opacity:0.6 }),
+      style: () => LAND_STYLE,
       onEachFeature: (feature, layer) => {
         const name = feature.properties.ADMIN || feature.properties.name;
         // Hover highlight only — no click toggle
@@ -341,7 +361,7 @@ fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/coun
         });
         layer.on('mouseout', function() {
           if (!state.visitedCountries.has(name))
-            this.setStyle({ fillColor:'transparent', fillOpacity:0 });
+            this.setStyle(LAND_STYLE);
         });
         // Click a country → zoom the map to its main landmass
         layer.on('click', function() {
@@ -410,13 +430,13 @@ function unshadeCountryIfNoPins(countryName) {
   if (!hasPins) {
     state.visitedCountries.delete(countryName);
     const layer = state.countryLayers[countryName];
-    if (layer) layer.setStyle({ fillColor:'transparent', fillOpacity:0, color:'#d9cff0', weight:0.5, opacity:0.6 });
+    if (layer) layer.setStyle(LAND_STYLE);
     // also try fuzzy
     const norm = s => s.toLowerCase().replace(/[^a-z]/g,'');
     const match = Object.keys(state.countryLayers).find(k => norm(k) === norm(countryName));
     if (match && match !== countryName) {
       state.visitedCountries.delete(match);
-      state.countryLayers[match].setStyle({ fillColor:'transparent', fillOpacity:0, color:'#d9cff0', weight:0.5, opacity:0.6 });
+      state.countryLayers[match].setStyle(LAND_STYLE);
     }
   }
 }
@@ -1003,7 +1023,12 @@ document.addEventListener('click', e => {
 });
 
 // ─── API layer ──────────────────────────────────────────────────────────
-const API_BASE = 'http://localhost:3000';
+// Local dev talks to your own machine; the live site talks to the deployed server.
+// ↓ Replace with your Render URL after deploying the backend.
+const PROD_API = 'https://YOUR-APP.onrender.com';
+const API_BASE = ['localhost', '127.0.0.1'].includes(location.hostname)
+  ? 'http://localhost:3000'
+  : PROD_API;
 
 async function apiFetch(path, opts = {}) {
   const res = await fetch(API_BASE + path, {

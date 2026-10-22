@@ -35,7 +35,10 @@ cloudinary.config({
 
 // ─── Core middleware ─────────────────────────────────────────────────────
 // CORS must allow credentials so the session cookie is sent on fetch().
-app.use(cors({ origin: CLIENT_URL, credentials: true }));
+// CORS origins are scheme+host only, so strip any path (e.g. github.io/postcards).
+const IS_PROD = process.env.NODE_ENV === 'production';
+const CLIENT_ORIGIN = new URL(CLIENT_URL).origin;
+app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 
 // Behind a proxy in production (e.g. Render/Heroku) this lets secure cookies work.
@@ -49,10 +52,10 @@ app.use(
     cookie: {
       httpOnly: true,
       // localhost:5500 and localhost:3000 are "same-site" (ports are ignored),
-      // so 'lax' works locally. For two DIFFERENT domains in production, switch
-      // to sameSite: 'none' and secure: true (requires HTTPS).
-      sameSite: 'lax',
-      secure: false,
+      // so 'lax' works locally. In production the frontend (github.io) and API
+      // (onrender.com) are different sites, which requires 'none' + secure (HTTPS).
+      sameSite: IS_PROD ? 'none' : 'lax',
+      secure: IS_PROD,
       maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     },
   })
